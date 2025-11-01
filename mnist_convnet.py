@@ -146,14 +146,21 @@ if __name__ == "__main__":
 
     t.set_description(f"lr: {opt.lr.item():2.2e}  loss: {loss.item():2.2f}  accuracy: {best_acc:2.2f}%")
 
-  Device.DEFAULT = "WEBGPU"
+    # EXPORT WEBGPU (CPU safe !)
+  Device.DEFAULT = "CPU"  # 🔥 FIX Codespace: NO dawn crash !
   model = Model()
   if best_file:
     state_dict = safe_load(best_file)
   else:
-    raise FileNotFoundError("No safetensors file found in the directory.")
+    raise FileNotFoundError("No safetensors file found.")
   load_state_dict(model, state_dict)
   input = Tensor.randn(1, 1, 28, 28)
-  prg, *_, state = export_model(model, Device.DEFAULT.lower(), input, model_name=model_name)
+  prg, *_, state = **export_model(model, "webgpu", input, model_name=model_name)**  # 🔥 JS SHADERS !
   safe_save(state, dir_name / f"{model_name}.webgpu.safetensors")
   with open(dir_name / f"{model_name}.js", "w") as text_file: text_file.write(prg)
+
+  # 🔥 AUTO-CLEAN SPAM
+  import glob, os
+  for f in glob.glob(str(dir_name / f"{model_name}_*.safetensors")): os.remove(f)
+  
+  print(f"✅ **{best_acc:.2f}% WebGPU JS EXPORTED** : {dir_name / f'{model_name}.js'}")
