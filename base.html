@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digit Classifier</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #111827;
+            color: white;
+        }
+        canvas {
+            background: black;
+            touch-action: none;
+            border-radius: 0.5rem;
+            cursor: crosshair;
+            -webkit-transform: translate3d(0, 0, 0);
+            transform: translate3d(0, 0, 0);
+        }
+        .bar-container {
+            position: relative;
+            width: 1.5rem;
+            height: 5rem;
+            background-color: #374151;
+            border-radius: 0.25rem;
+        }
+        .prob-bar {
+            background-color: #3b82f6;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            transition: height 0.2s ease;
+            border-radius: 0.25rem;
+        }
+        .btn-active {
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+        }
+        .preview {
+            image-rendering: pixelated;
+            width: 112px;
+            height: 112px;
+            border-radius: 0.5rem;
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+        .btn-modern {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            border: 1px solid transparent;
+        }
+        .btn-modern:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+        }
+        .btn-modern:active {
+            transform: translateY(0);
+        }
+        .btn-run {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            border-color: #1e40af;
+        }
+        .btn-run:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+        }
+        .btn-auto {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            color: white;
+            border-color: #6d28d9;
+        }
+        .btn-auto:hover {
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+        }
+        .btn-auto.active {
+            background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%);
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen p-4">
+    <div class="w-full max-w-md bg-[#111827] rounded-lg shadow-lg p-6">
+        <h1 class="text-2xl font-bold mb-4 text-center">MNIST Digit Classifier</h1>
+        <p class="text-center mb-4">Select a model, draw a digit, and see the prediction!</p>
+
+        <!-- Model Selection -->
+        <div class="mb-4">
+            <label for="model-select" class="block text-sm font-medium mb-2">Model Selection</label>
+            <select id="model-select" class="w-full bg-gray-700 text-white p-2 rounded">
+                <option value="mlp">MLP</option>
+                <option value="cnn">CNN</option>
+            </select>
+        </div>
+
+        <!-- Drawing Tools -->
+        <div class="flex items-center gap-3 mb-4">
+            <button id="pen-btn" class="px-4 py-2 rounded bg-blue-600 text-white btn-active">Pen</button>
+            <button id="eraser-btn" class="px-4 py-2 rounded bg-red-600 text-white">Eraser</button>
+            <button id="clear-btn" class="px-4 py-2 rounded bg-gray-600 text-white">Clear</button>
+            <label class="ml-2 text-sm">Brush size
+                <input id="brush-size" type="range" min="4" max="48" value="20" class="ml-2">
+            </label>
+        </div>
+
+        <!-- Canvas -->
+        <div class="flex justify-center mb-4">
+            <canvas id="drawing-canvas" width="280" height="280" style="width:280px;height:280px;"></canvas>
+        </div>
+
+        <!-- Run Model Button and Preview -->
+        <div class="flex justify-center gap-3 mb-4">
+            <button id="run-model" class="btn-modern btn-run px-6 py-2 rounded-lg">Run Model</button>
+            <button id="auto-run" class="btn-modern btn-auto px-6 py-2 rounded-lg">Toggle Auto-run</button>
+            <div class="flex flex-col items-center">
+                <span class="text-xs mb-1">Preview 28×28</span>
+                <canvas id="preview28" width="28" height="28" class="preview"></canvas>
+            </div>
+        </div>
+
+        <!-- Prediction Output -->
+        <div id="prediction" class="text-center mb-4">
+            <p id="best-guess" class="text-lg font-bold">Best Guess: -</p>
+            <p id="inference-time" class="text-sm">Inference Time: - ms</p>
+        </div>
+
+        <!-- Probability Bars Container -->
+        <div id="probability-bars" class="flex justify-around w-full mt-4">
+        </div>
+    </div>
+
+    <script type="module">
+        // Import models
+        import mnist_mlp from './mnist_mlp/mnist_mlp.js';
+        import mnist_convnet from './mnist_convnet/mnist_convnet.js';
+
+        const canvas = document.getElementById('drawing-canvas');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        const preview = document.getElementById('preview28');
+        const pctx = preview.getContext('2d');
+
+        function setupHiDPI() {
+            const ratio = Math.max(window.devicePixelRatio || 1, 1);
+            const cssW = parseInt(canvas.style.width) || canvas.width;
+            const cssH = parseInt(canvas.style.height) || canvas.height;
+            canvas.width = Math.round(cssW * ratio);
+            canvas.height = Math.round(cssH * ratio);
+            canvas.style.width = cssW + 'px';
+            canvas.style.height = cssH + 'px';
+            ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+            ctx.fillStyle = 'black';
+            ctx.fillRect(0, 0, cssW, cssH);
+        }
+        setupHiDPI();
+        window.addEventListener('resize', setupHiDPI);
+
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        let drawing = false;
+        let eraser = false;
+        let lastX = 0, lastY = 0;
+        let brushSize = 20;
+        let autoRun = false;
+        let currentModel = 'mlp';
+        let modelRunner = null;
+        let device = null;
+
+        async function initWebGPU() {
+            if (!navigator.gpu) {
+                alert('WebGPU not supported.');
+                return;
+            }
+            const adapter = await navigator.gpu.requestAdapter();
+            device = await adapter.requestDevice();
+        }
+
+        async function loadModel(modelType) {
+            let modelModule, safetensorsUrl;
+            if (modelType === 'mlp') {
+                modelModule = mnist_mlp;
+                safetensorsUrl = './mnist_mlp/mnist_mlp.webgpu.safetensors';
+            } else {
+                modelModule = mnist_convnet;
+                safetensorsUrl = './mnist_convnet/mnist_convnet.webgpu.safetensors';
+            }
+
+            const safetensors = await fetch(safetensorsUrl).then(res => res.arrayBuffer()).then(buf => new Uint8Array(buf));
+            modelRunner = await modelModule.setupNet(device, safetensors);
+        }
+
+        function getImageData28() {
+            const tmp = document.createElement('canvas');
+            tmp.width = 28;
+            tmp.height = 28;
+            const tctx = tmp.getContext('2d');
+            tctx.imageSmoothingEnabled = false;
+            tctx.drawImage(canvas, 0, 0, tmp.width, tmp.height);
+
+            const img = tctx.getImageData(0, 0, tmp.width, tmp.height);
+            const data = new Float32Array(28 * 28);
+            for (let i = 0; i < 28 * 28; i++) {
+                const idx = i * 4;
+                const r = img.data[idx], g = img.data[idx + 1], b = img.data[idx + 2];
+                const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+                data[i] = lum * 2 - 1;
+            }
+            pctx.imageSmoothingEnabled = false;
+            pctx.clearRect(0, 0, 28, 28);
+            pctx.drawImage(tmp, 0, 0, 28, 28);
+            console.log('Input Data:', data);
+            return data;
+        }
+
+        function updatePreview() {
+            const tmp = document.createElement('canvas');
+            tmp.width = 28;
+            tmp.height = 28;
+            const tctx = tmp.getContext('2d');
+            tctx.imageSmoothingEnabled = false;
+            tctx.drawImage(canvas, 0, 0, 28, 28);
+            pctx.imageSmoothingEnabled = false;
+            pctx.clearRect(0, 0, 28, 28);
+            pctx.drawImage(tmp, 0, 0, 28, 28);
+        }
+
+        function softmax(arr) {
+            const validArr = arr.filter(v => !isNaN(v));
+            if (validArr.length === 0) {
+                return new Array(10).fill(0.1);
+            }
+            const max = Math.max(...validArr);
+            const exps = arr.map(v => isNaN(v) ? 0 : Math.exp(v - max));
+            const s = exps.reduce((a, b) => a + b, 0);
+            if (s === 0) {
+                return new Array(10).fill(0.1);
+            }
+            return exps.map(v => v / s);
+        }
+
+        function setBars(probs) {
+            let maxProb = -1, best = -1;
+            for (let i = 0; i < 10; i++) {
+                if (probs[i] > maxProb) { 
+                    maxProb = probs[i]; 
+                    best = i; 
+                }
+                const pct = Math.round(probs[i] * 100);
+                const barEl = document.getElementById(`bar-${i}`);
+                const probEl = document.getElementById(`prob-${i}`);
+                if (barEl) barEl.style.height = `${pct}%`;
+                if (probEl) probEl.textContent = `${pct}%`;
+            }
+            document.getElementById('best-guess').textContent = `Best Guess: ${best}`;
+        }
+
+        async function runInference() {
+            if (!modelRunner) return;
+
+            const t0 = performance.now();
+            const input = getImageData28();
+            const result = await modelRunner(input);
+            
+            // Le modèle retourne un tableau avec un seul élément (Float32Array des logits)
+            const logits = result[0];
+            console.log('Logits:', logits);
+            
+            const probs = softmax(Array.from(logits));
+            console.log('Probabilities:', probs);
+            
+            setBars(probs);
+            const t1 = performance.now();
+            document.getElementById('inference-time').textContent = `Inference Time: ${(t1 - t0).toFixed(2)} ms`;
+            updatePreview();
+        }
+
+        function resetPrediction() {
+            for (let i = 0; i < 10; i++) {
+                const barEl = document.getElementById(`bar-${i}`);
+                const probEl = document.getElementById(`prob-${i}`);
+                if (barEl) barEl.style.height = `0%`;
+                if (probEl) probEl.textContent = `0%`;
+            }
+            document.getElementById('best-guess').textContent = `Best Guess: -`;
+            document.getElementById('inference-time').textContent = `Inference Time: - ms`;
+        }
+
+        function getPointerPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.clientX !== undefined ? e.clientX : (e.touches ? e.touches[0].clientX : 0);
+            const clientY = e.clientY !== undefined ? e.clientY : (e.touches ? e.touches[0].clientY : 0);
+            return { x: clientX - rect.left, y: clientY - rect.top };
+        }
+
+        function startDrawing(e) {
+            e.preventDefault();
+            canvas.setPointerCapture(e.pointerId);
+            drawing = true;
+            const pos = getPointerPos(e);
+            lastX = pos.x;
+            lastY = pos.y;
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineWidth = brushSize;
+            ctx.strokeStyle = eraser ? 'black' : 'white';
+            ctx.lineTo(lastX, lastY);
+            ctx.stroke();
+        }
+
+        function stopDrawing(e) {
+            if (drawing && e && e.pointerId !== undefined) {
+                try { canvas.releasePointerCapture(e.pointerId); } catch(_) {}
+            }
+            drawing = false;
+            if (autoRun) runInference();
+        }
+
+        function draw(e) {
+            if (!drawing) return;
+            const pos = getPointerPos(e);
+            ctx.strokeStyle = eraser ? 'black' : 'white';
+            ctx.lineWidth = brushSize;
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(pos.x, pos.y);
+            ctx.stroke();
+            lastX = pos.x;
+            lastY = pos.y;
+        }
+
+        canvas.addEventListener('pointerdown', startDrawing);
+        canvas.addEventListener('pointermove', draw);
+        canvas.addEventListener('pointerup', stopDrawing);
+        canvas.addEventListener('pointercancel', stopDrawing);
+        canvas.addEventListener('pointerleave', stopDrawing);
+
+        document.getElementById('pen-btn').addEventListener('click', () => {
+            eraser = false;
+            document.getElementById('pen-btn').classList.add('btn-active');
+            document.getElementById('eraser-btn').classList.remove('btn-active');
+        });
+
+        document.getElementById('eraser-btn').addEventListener('click', () => {
+            eraser = true;
+            document.getElementById('eraser-btn').classList.add('btn-active');
+            document.getElementById('pen-btn').classList.remove('btn-active');
+        });
+
+        document.getElementById('clear-btn').addEventListener('click', () => {
+            const cssW = parseInt(canvas.style.width) || canvas.width;
+            const cssH = parseInt(canvas.style.height) || canvas.height;
+            ctx.fillStyle = 'black';
+            ctx.fillRect(0, 0, cssW, cssH);
+            resetPrediction();
+            updatePreview();
+        });
+
+        document.getElementById('brush-size').addEventListener('input', (e) => {
+            brushSize = Number(e.target.value);
+        });
+
+        document.getElementById('auto-run').addEventListener('click', () => {
+            autoRun = !autoRun;
+            document.getElementById('auto-run').classList.toggle('active', autoRun);
+        });
+
+        // Create probability bars
+        const barContainer = document.getElementById('probability-bars');
+        for (let i = 0; i < 10; i++) {
+            const barDiv = document.createElement('div');
+            barDiv.className = 'flex flex-col items-center';
+            barDiv.innerHTML = `
+                <span id="prob-${i}" class="text-xs mb-1">0%</span>
+                <div class="bar-container">
+                    <div id="bar-${i}" class="prob-bar" style="height: 0%;"></div>
+                </div>
+                <span class="text-sm mt-1">${i}</span>
+            `;
+            barContainer.appendChild(barDiv);
+        }
+
+        document.getElementById('model-select').addEventListener('change', (e) => {
+            currentModel = e.target.value;
+            loadModel(currentModel);
+        });
+
+        document.getElementById('run-model').addEventListener('click', runInference);
+
+        // Init
+        (async () => {
+            await initWebGPU();
+            await loadModel(currentModel);
+            updatePreview();
+            setInterval(() => {
+                if (autoRun && !drawing) {
+                    runInference();
+                }
+            }, 600);
+        })();
+    </script>
+</body>
+</html>

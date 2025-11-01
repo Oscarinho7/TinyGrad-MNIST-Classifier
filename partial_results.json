@@ -1,0 +1,206 @@
+[
+  {
+    "experiment": 3,
+    "model": "mlp",
+    "config": {
+      "BATCH": 256,
+      "LR": 0.003,
+      "LR_DECAY": 0.95,
+      "PATIENCE": 75,
+      "STEPS": 250
+    },
+    "accuracy": null,
+    "loss": null,
+    "duration_seconds": 25.639524,
+    "timestamp": "2025-10-18T22:28:58.654039",
+    "success": true,
+    "output": "loaded weights in 800.04 ms, 0.00 GB loaded at 0.00 GB/s\n"
+  },
+  {
+    "experiment": 4,
+    "model": "mlp",
+    "config": {
+      "BATCH": 128,
+      "LR": 0.005,
+      "LR_DECAY": 0.95,
+      "PATIENCE": 100,
+      "STEPS": 300
+    },
+    "accuracy": null,
+    "loss": null,
+    "duration_seconds": 34.750075,
+    "timestamp": "2025-10-18T22:29:24.296720",
+    "success": true,
+    "output": "loaded weights in 300.29 ms, 0.00 GB loaded at 0.01 GB/s\n"
+  },
+  {
+    "experiment": 5,
+    "model": "mlp",
+    "config": {
+      "BATCH": 256,
+      "LR": 0.005,
+      "LR_DECAY": 0.95,
+      "PATIENCE": 75,
+      "STEPS": 200
+    },
+    "accuracy": null,
+    "loss": null,
+    "duration_seconds": 21.90734,
+    "timestamp": "2025-10-18T22:29:59.049417",
+    "success": true,
+    "output": "loaded weights in 404.60 ms, 0.00 GB loaded at 0.01 GB/s\n"
+  },
+  {
+    "experiment": 6,
+    "model": "mlp",
+    "config": {
+      "BATCH": 256,
+      "LR": 0.005,
+      "LR_DECAY": 0.95,
+      "PATIENCE": 75,
+      "STEPS": 200
+    },
+    "accuracy": null,
+    "loss": null,
+    "duration_seconds": 19.363612,
+    "timestamp": "2025-10-18T22:30:20.959559",
+    "success": true,
+    "output": "loaded weights in 191.87 ms, 0.00 GB loaded at 0.01 GB/s\n"
+  },
+  {
+    "experiment": 7,
+    "model": "mlp",
+    "config": {
+      "BATCH": 512,
+      "LR": 0.01,
+      "LR_DECAY": 0.93,
+      "PATIENCE": 60,
+      "STEPS": 150
+    },
+    "accuracy": null,
+    "loss": null,
+    "duration_seconds": 16.268456,
+    "timestamp": "2025-10-18T22:30:40.325144",
+    "success": true,
+    "output": "loaded weights in 232.55 ms, 0.00 GB loaded at 0.01 GB/s\n"
+  },
+  {
+    "experiment": 8,
+    "model": "mlp",
+    "config": {
+      "BATCH": 256,
+      "LR": 0.005,
+      "LR_DECAY": 0.98,
+      "PATIENCE": 100,
+      "STEPS": 300
+    },
+    "accuracy": null,
+    "loss": null,
+    "duration_seconds": 25.833061,
+    "timestamp": "2025-10-18T22:30:56.595568",
+    "success": true,
+    "output": "loaded weights in  18.48 ms, 0.00 GB loaded at 0.14 GB/s\nloaded weights in 250.23 ms, 0.00 GB loaded at 0.01 GB/s\n"
+  },
+  {
+    "experiment": 3,
+    "model": "convnet",
+    "config": {
+      "BATCH": 128,
+      "LR": 0.002,
+      "LR_DECAY": 0.95,
+      "PATIENCE": 75,
+      "STEPS": 300
+    },
+    "accuracy": null,
+    "loss": null,
+    "duration_seconds": 101.738582,
+    "timestamp": "2025-10-18T22:31:22.431238",
+    "success": true,
+    "output": "loaded weights in  58.47 ms, 0.00 GB loaded at 0.01 GB/s\nloaded weights in 575.88 ms, 0.00 GB loaded at 0.00 GB/s\n"
+  },
+  {
+    "experiment": 4,
+    "model": "convnet",
+    "config": {
+      "BATCH": 64,
+      "LR": 0.002,
+      "LR_DECAY": 0.95,
+      "PATIENCE": 100,
+      "STEPS": 350
+    },
+    "accuracy": null,
+    "loss": null,
+    "duration_seconds": 126.807386,
+    "timestamp": "2025-10-18T22:33:04.171396",
+    "success": true,
+    "output": "loaded weights in 802.27 ms, 0.00 GB loaded at 0.00 GB/s\n"
+  },
+  {
+    "experiment": 5,
+    "model": "convnet",
+    "config": {
+      "BATCH": 128,
+      "LR": 0.003,
+      "LR_DECAY": 0.95,
+      "PATIENCE": 75,
+      "STEPS": 250
+    },
+    "accuracy": null,
+    "loss": null,
+    "duration_seconds": 117.030472,
+    "timestamp": "2025-10-18T22:35:10.981269",
+    "success": true,
+    "output": "loaded weights in 274.03 ms, 0.00 GB loaded at 0.00 GB/s\nloaded weights in 1932.34 ms, 0.00 GB loaded at 0.00 GB/s\n"
+  },
+  {
+    "experiment": 6,
+    "model": "convnet",
+    "config": {
+      "BATCH": 128,
+      "LR": 0.003,
+      "LR_DECAY": 0.9,
+      "PATIENCE": 75,
+      "STEPS": 200
+    },
+    "accuracy": null,
+    "loss": null,
+    "duration_seconds": 151.72567,
+    "timestamp": "2025-10-18T22:37:08.018651",
+    "success": true,
+    "output": "loaded weights in 882.55 ms, 0.00 GB loaded at 0.00 GB/s\n"
+  },
+  {
+    "experiment": 7,
+    "model": "convnet",
+    "config": {
+      "BATCH": 128,
+      "LR": 0.003,
+      "LR_DECAY": 0.95,
+      "PATIENCE": 75,
+      "STEPS": 250
+    },
+    "accuracy": null,
+    "loss": null,
+    "duration_seconds": 105.530685,
+    "timestamp": "2025-10-18T22:39:39.754485",
+    "success": true,
+    "output": "loaded weights in 123.45 ms, 0.00 GB loaded at 0.00 GB/s\nloaded weights in 1032.66 ms, 0.00 GB loaded at 0.00 GB/s\n"
+  },
+  {
+    "experiment": 8,
+    "model": "convnet",
+    "config": {
+      "BATCH": 128,
+      "LR": 0.003,
+      "LR_DECAY": 0.95,
+      "PATIENCE": 75,
+      "STEPS": 250
+    },
+    "accuracy": null,
+    "loss": null,
+    "duration_seconds": 110.3128,
+    "timestamp": "2025-10-18T22:41:25.295023",
+    "success": true,
+    "output": "loaded weights in 749.03 ms, 0.00 GB loaded at 0.00 GB/s\n"
+  }
+]

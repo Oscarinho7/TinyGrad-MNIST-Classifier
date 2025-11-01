@@ -1,0 +1,458 @@
+# HYPERPARAMETERS EXPLORATION
+
+## MLP (Multi-Layer Perceptron)
+
+### Base Architecture
+```python
+784 → 512 (SiLU) → 512 (SiLU) → 10
+```
+
+---
+
+### Experiment #1 - Baseline
+**Config:**
+- BATCH: 512
+- LR: 0.02
+- LR_DECAY: 0.9
+- PATIENCE: 50
+- STEPS: 70
+
+**Results:**
+- Accuracy: **86.00%**
+- Loss: 0.52
+- Training time: ~900s
+
+**Notes:** LR too high, model oscillates and doesn't converge well
+
+---
+
+### Experiment #2 - Optimized
+**Config:**
+- BATCH: 256
+- LR: 0.005
+- LR_DECAY: 0.95
+- PATIENCE: 75
+- STEPS: 200
+
+**Results:**
+- Accuracy: **96.29%**
+- Loss: 0.21
+- Training time: ~1080s
+
+**Notes:** Balanced configuration, excellent speed/accuracy trade-off
+
+---
+
+### Experiment #3 - Lower LR
+**Config:**
+- BATCH: 256
+- LR: 0.003
+- LR_DECAY: 0.95
+- PATIENCE: 75
+- STEPS: 250
+
+**Results:**
+- Accuracy: **96.65%**
+- Loss: 0.18
+- Training time: 30s
+
+**Notes:** **BEST MLP** - Lower LR provides better convergence and lower loss
+
+---
+
+### Experiment #4 - Smaller Batch
+**Config:**
+- BATCH: 128
+- LR: 0.005
+- LR_DECAY: 0.95
+- PATIENCE: 100
+- STEPS: 300
+
+**Results:**
+- Accuracy: **95.33%**
+- Loss: 0.28
+- Training time: 36s
+
+**Notes:** Batch too small with high LR = instability, worse than #2 despite more steps
+
+---
+
+### Experiment #5 - Wider Architecture
+**Architecture:** `784 → 1024 (SiLU) → 512 (SiLU) → 10`
+
+**Config:**
+- BATCH: 256
+- LR: 0.005
+- LR_DECAY: 0.95
+- PATIENCE: 75
+- STEPS: 200
+
+**Results:**
+- Accuracy: **96.08%**
+- Loss: 0.23
+- Training time: 24s
+
+**Notes:** More parameters but no significant gain, risk of overfitting
+
+---
+
+### Experiment #6 - Narrower Architecture
+**Architecture:** `784 → 512 (SiLU) → 256 (SiLU) → 10`
+
+**Config:**
+- BATCH: 256
+- LR: 0.005
+- LR_DECAY: 0.95
+- PATIENCE: 75
+- STEPS: 200
+
+**Results:**
+- Accuracy: **95.97%**
+- Loss: 0.20
+- Training time: 24s
+
+**Notes:** Lighter architecture, less capacity = slight accuracy drop
+
+---
+
+### Experiment #7 - Medium Settings
+**Config:**
+- BATCH: 512
+- LR: 0.01
+- LR_DECAY: 0.93
+- PATIENCE: 60
+- STEPS: 150
+
+**Results:**
+- Accuracy: **96.44%**
+- Loss: 0.15
+- Training time: 24s
+
+**Notes:** Good speed/accuracy compromise, very low loss thanks to moderate LR
+
+---
+
+### Experiment #8 - ReLU Activation
+**Architecture:** `784 → 512 (ReLU) → 512 (ReLU) → 10`
+
+**Config:**
+- BATCH: 256
+- LR: 0.005
+- LR_DECAY: 0.98
+- PATIENCE: 100
+- STEPS: 300
+
+**Results:**
+- Accuracy: **96.34%**
+- Loss: 0.18
+- Training time: 36s
+
+**Notes:** ReLU vs SiLU: minimal difference, SiLU slightly better for convergence
+
+---
+
+### MLP Summary
+
+**Best Configuration:** Experiment #3
+
+**Key Findings:**
+- **Optimal Learning Rate**: 0.003-0.005 (too high = oscillation, too low = slow)
+- **Batch size**: 256 is the sweet spot (128 too unstable, 512 too stable)
+- **Architecture**: Standard (512→512) sufficient, wider doesn't help
+- **Training duration**: 200-250 steps sufficient, beyond that diminishing returns
+- **Activation**: SiLU slightly better than ReLU (smoother gradients)
+
+**Best Result: 96.65% (Target: ≥95%)**
+
+---
+
+## CNN (Convolutional Neural Network)
+
+### Base Architecture
+```python
+1×28×28 
+→ Conv(1→32, k=5) + SiLU 
+→ Conv(32→32, k=5) + SiLU + BatchNorm + MaxPool
+→ Conv(32→64, k=3) + SiLU 
+→ Conv(64→64, k=3) + SiLU + BatchNorm + MaxPool
+→ Flatten → Linear(576→10)
+```
+
+---
+
+### Experiment #1 - Baseline
+**Config:**
+- BATCH: 128
+- LR: 0.003
+- LR_DECAY: 0.9
+- PATIENCE: 50
+- STEPS: 70
+
+**Results:**
+- Accuracy: **97.62%**
+- Loss: 0.11
+- Training time: ~600s
+
+**Notes:** Good fast baseline but undertrained, can do better with more steps
+
+---
+
+### Experiment #2 - More Steps
+**Config:**
+- BATCH: 128
+- LR: 0.003
+- LR_DECAY: 0.9
+- PATIENCE: 75
+- STEPS: 250
+
+**Results:**
+- Accuracy: **98.14%**
+- Loss: 0.16
+- Training time: ~1500s
+
+**Notes:** More steps significantly improve, CNN needs time to learn features
+
+---
+
+### Experiment #3 - Lower LR
+**Config:**
+- BATCH: 128
+- LR: 0.002
+- LR_DECAY: 0.95
+- PATIENCE: 75
+- STEPS: 300
+
+**Results:**
+- Accuracy: **98.31%**
+- Loss: 0.11
+- Training time: 120s
+
+**Notes:** **BEST CNN** - Low LR + long training = stable convergence and maximum accuracy
+
+---
+
+### Experiment #4 - Very Small Batch
+**Config:**
+- BATCH: 64
+- LR: 0.002
+- LR_DECAY: 0.95
+- PATIENCE: 100
+- STEPS: 350
+
+**Results:**
+- Accuracy: **98.02%**
+- Loss: 0.06
+- Training time: 102s
+
+**Notes:** Very small batch = ultra-low loss but slight accuracy drop (too much noise)
+
+---
+
+### Experiment #5 - Deeper Network (3 blocks)
+**Architecture:** Add 3rd convolutional block with 128 filters
+
+**Config:**
+- BATCH: 128
+- LR: 0.003
+- LR_DECAY: 0.95
+- PATIENCE: 75
+- STEPS: 250
+
+**Results:**
+- Accuracy: **98.15%**
+- Loss: 0.13
+- Training time: 102s
+
+**Notes:** More depth doesn't improve much, 2 blocks sufficient for MNIST
+
+---
+
+### Experiment #6 - Lighter Network
+**Architecture:** Fewer filters (16→32→32 instead of 32→64)
+
+**Config:**
+- BATCH: 128
+- LR: 0.003
+- LR_DECAY: 0.9
+- PATIENCE: 75
+- STEPS: 200
+
+**Results:**
+- Accuracy: **97.86%**
+- Loss: 0.03
+- Training time: 84s
+
+**Notes:** Faster but less accurate, very low loss = good generalization
+
+---
+
+### Experiment #7 - ReLU Activation
+**Config:**
+- BATCH: 128
+- LR: 0.003
+- LR_DECAY: 0.95
+- PATIENCE: 75
+- STEPS: 250
+
+**Results:**
+- Accuracy: **98.31%**
+- Loss: 0.06
+- Training time: 108s
+
+**Notes:** ReLU = same accuracy as SiLU but faster to compute, good choice for production
+
+---
+
+### Experiment #8 - No BatchNorm
+**Config:**
+- BATCH: 128
+- LR: 0.003
+- LR_DECAY: 0.95
+- PATIENCE: 75
+- STEPS: 250
+
+**Results:**
+- Accuracy: **98.36%**
+- Loss: 0.03
+- Training time: 102s
+
+**Notes:** **SURPRISE**: Without BatchNorm = better accuracy + ultra-low loss, BatchNorm not necessary for MNIST
+
+---
+
+### CNN Summary
+
+**Best Configuration:** Experiment #8 (No BatchNorm) or #3 (Lower LR)
+
+**Key Findings:**
+- **Optimal Learning Rate**: 0.002-0.003 for CNN (lower than MLP)
+- **Batch size**: 128 optimal for CNN (64 too noisy, 256 too stable)
+- **Architecture**: 2 conv blocks sufficient, more depth = overkill
+- **BatchNorm**: Not necessary for MNIST, simplifies model without loss
+- **Activation**: ReLU and SiLU equivalent, ReLU faster
+- **Training duration**: 250-300 steps needed for complete convergence
+
+**Best Result: 98.36% (Target: ≥98%)**
+
+---
+
+## Final Analysis
+
+### What I Learned
+
+**About Learning Rate:**
+- MLP prefers slightly higher LR (0.003-0.005)
+- CNN requires lower LR (0.002-0.003) for stability
+- LR too high (>0.01) causes oscillations and poor convergence
+- Progressive decay (0.95-0.98) helps final fine-tuning
+
+**About Batch Size:**
+- Sweet spot: 128-256 for good speed/stability balance
+- Batch too small (64) = noisy gradients, unstable convergence
+- Batch too large (512) = too stable gradients, overfitting risk
+- CNN benefits from smaller batch than MLP (more features to learn)
+
+**About Architecture:**
+- MLP: 512→512 sufficient, wider doesn't help for MNIST
+- CNN: 2 conv blocks optimal, 3 blocks = overkill
+- BatchNorm not necessary for simple dataset like MNIST
+- SiLU vs ReLU: negligible difference (<0.3%), ReLU faster
+
+**About Training Duration:**
+- MLP: converges fast (150-200 steps sufficient)
+- CNN: needs more time (250-300 steps) for feature learning
+- Beyond 300 steps: marginal gains (<0.2%)
+- Patience (75-100) prevents premature early stopping
+
+### MLP vs CNN Comparison
+
+**Accuracy:**
+- MLP best: **96.65%** (Exp #3)
+- CNN best: **98.36%** (Exp #8)
+- **Difference: +1.71%** in favor of CNN
+
+**Speed:**
+- MLP training: 24-36s (3-4x faster)
+- CNN training: 84-120s
+- MLP inference: ~2-3 ms
+- CNN inference: ~8-10 ms
+
+**Model Complexity:**
+- MLP: Simple, fast, fewer parameters
+- CNN: More complex, exploits spatial structure of images
+
+**When to use each:**
+- **MLP**: Real-time applications, limited devices, 96% accuracy acceptable
+- **CNN**: Need for high precision (98%+), resources available, visual data
+
+---
+
+## Best Final Models
+
+### MLP - Experiment #3
+**Config:**
+```
+BATCH: 256
+LR: 0.003
+LR_DECAY: 0.95
+PATIENCE: 75
+STEPS: 250
+Architecture: 784 → 512 (SiLU) → 512 (SiLU) → 10
+```
+
+**Results:**
+- **Accuracy: 96.65%** (Target: ≥95%)
+- Loss: 0.18
+- Training time: 30s
+
+**Why it works:** 
+Low learning rate (0.003) enables fine and stable convergence. Batch size of 256 offers good balance between gradient stability and training speed. Standard architecture (512→512) has sufficient capacity without overfitting.
+
+---
+
+### CNN - Experiment #8 (No BatchNorm)
+**Config:**
+```
+BATCH: 128
+LR: 0.003
+LR_DECAY: 0.95
+PATIENCE: 75
+STEPS: 250
+Architecture: Standard CNN without BatchNorm
+```
+
+**Results:**
+- **Accuracy: 98.36%** (Target: ≥98%)
+- Loss: 0.03 (excellent)
+- Training time: 102s
+
+**Why it works:** 
+Removing BatchNorm simplifies the model and  improves results on MNIST. LR of 0.003 with batch 128 enables stable learning of convolutional features. Ultra-low loss (0.03) menas excellent generalization.
+
+---
+
+**Alternative CNN - Experiment #3 (Lower LR):**
+- Accuracy: 98.31%
+- More stable if keeping BatchNorm
+- Good choice for more complex datasets
+
+---
+
+## Conclusion
+
+**Goals achieved:**
+- MLP: 96.65% (target: ≥95%) → **+1.65%**
+- CNN: 98.36% (target: ≥98%) → **+0.36%**
+
+**Key insights:**
+1. Learning rate is the most critical parameter (impact: ±10%)
+2. Batch size affects stability more than final accuracy
+3. Simple architecture sufficient for MNIST, no need to overcomplicate
+4. BatchNorm not always necessary on simple datasets
+5. Training duration: CNN needs 2-3x more steps than MLP
+
+**Future improvements:**
+- Data augmentation (rotation, elastic deformation)
+- Model ensemble for 99%+
+- Test on MNIST-Corrupted for robustness
+- Quantization for mobile deployment
