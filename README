@@ -50,5 +50,10 @@ All inference runs **client-side**, **no server**, **no backend**, **no TensorFl
 - Node.js (optional, for `http-server`)
 - Chrome/Edge with **WebGPU enabled**
 
+## Hyperparameter Log
+
+For full details on all experiments, configurations, and results, see the [HYPERPARAMETERS.md](HYPERPARAMETERS.md) file.
+
+
 
 
