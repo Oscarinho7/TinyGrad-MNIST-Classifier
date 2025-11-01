@@ -1,4 +1,3 @@
-# mnist_mlp.py
 from enum import Enum
 from pathlib import Path
 from typing import Callable
@@ -8,15 +7,16 @@ from tinygrad.helpers import getenv, trange
 from tinygrad.nn.datasets import mnist
 from tinygrad.nn.state import get_state_dict, load_state_dict, safe_load, safe_save
 from export_model import export_model
-import math, glob, os
+import math
 from datetime import datetime
 
 class SamplingMod(Enum):
-    BILINEAR = 0
-    NEAREST = 1
+  BILINEAR = 0
+  NEAREST = 1
 
 def geometric_transform(X: Tensor, angle_deg: Tensor, scale: Tensor, shift_x: Tensor, shift_y: Tensor, sampling: SamplingMod) -> Tensor:
     B, C, H, W = X.shape
+
     angle = angle_deg * math.pi / 180.0
     cos_a, sin_a = Tensor.cos(angle), Tensor.sin(angle)
     R11, R12, T13 = cos_a * scale, -sin_a * scale, shift_x
@@ -38,102 +38,118 @@ def geometric_transform(X: Tensor, angle_deg: Tensor, scale: Tensor, shift_x: Te
         return X.reshape(B, C * H * W).gather(1, y_idx * W + x_idx).reshape(B, C, H, W)
 
     elif sampling == SamplingMod.BILINEAR:
-        x_prime, y_prime = transformed_coords[:, :, 0], transformed_coords[:, :, 1]
+        x_prime, y_prime = transformed_coords[:, :, 0],  transformed_coords[:, :, 1]
         x0, y0 = x_prime.floor().int(), y_prime.floor().int()
         dx, dy = x_prime - x0.float(), y_prime - y0.float()
+
         x1, y1 = x0 + 1, y0 + 1
         x0, y0 = x0.clip(0, W - 1), y0.clip(0, H - 1)
         x1, y1 = x1.clip(0, W - 1), y1.clip(0, H - 1)
+
         w00 = (1.0 - dx) * (1.0 - dy)
         w10 = dx * (1.0 - dy)
         w01 = (1.0 - dx) * dy
         w11 = dx * dy
+
         X_flat = X.reshape(B, C * H * W)
         v00 = X_flat.gather(1, y0 * W + x0)
         v10 = X_flat.gather(1, y0 * W + x1)
         v01 = X_flat.gather(1, y1 * W + x0)
         v11 = X_flat.gather(1, y1 * W + x1)
+
         return ((w00 * v00) + (w10 * v10) + (w01 * v01) + (w11 * v11)).reshape(B, C, H, W)
 
+
 def normalize(X: Tensor) -> Tensor:
-    return X * 2 / 255 - 1
+  return X * 2 / 255 - 1
+
 
 class Model:
-    def __init__(self):
-        self.layers: list[Callable[[Tensor], Tensor]] = [
-            lambda x: x.flatten(1),
-            nn.Linear(784, 512), Tensor.silu,
-            nn.Linear(512, 512), Tensor.silu,
-            nn.Linear(512, 10),
-        ]
-    def __call__(self, x: Tensor) -> Tensor:
-        return x.sequential(self.layers)
+  def __init__(self):
+    self.layers: list[Callable[[Tensor], Tensor]] = [
+      lambda x: x.flatten(1),
+      nn.Linear(784, 512), Tensor.silu,
+      nn.Linear(512, 512), Tensor.silu,
+      nn.Linear(512, 10),
+    ]
+
+  def __call__(self, x:Tensor) -> Tensor: return x.sequential(self.layers)
 
 if __name__ == "__main__":
-    B = int(getenv("BATCH", 256))
-    LR = float(getenv("LR", 0.003))
-    LR_DECAY = float(getenv("LR_DECAY", 0.95))
-    PATIENCE = int(getenv("PATIENCE", 75))
-    ANGLE = float(getenv("ANGLE", 15))
-    SCALE = float(getenv("SCALE", 0.1))
-    SHIFT = float(getenv("SHIFT", 0.1))
-    SAMPLING = SamplingMod(getenv("SAMPLING", SamplingMod.NEAREST.value))
-    STEPS = int(getenv("STEPS", 250))
+  B = int(getenv("BATCH", 256))
+  LR = float(getenv("LR", 0.003))
+  LR_DECAY = float(getenv("LR_DECAY", 0.95))
+  PATIENCE = float(getenv("PATIENCE", 75))
 
-    model_name = "mnist_mlp"
-    dir_name = Path(__file__).parent / model_name
-    dir_name.mkdir(exist_ok=True)
+  ANGLE = float(getenv("ANGLE", 15))
+  SCALE = float(getenv("SCALE", 0.1))
+  SHIFT = float(getenv("SHIFT", 0.1))
+  SAMPLING = SamplingMod(getenv("SAMPLING", SamplingMod.NEAREST.value))
 
-    X_train, Y_train, X_test, Y_test = mnist()
-    model = Model()
-    opt = nn.optim.Muon(nn.state.get_parameters(model), lr=LR)
+  model_name = Path(__file__).name.split('.')[0]
+  dir_name = Path(__file__).parent / model_name
+  dir_name.mkdir(exist_ok=True)
 
-    @TinyJit
-    @Tensor.train()
-    def train_step():
-        samples = Tensor.randint(B, high=X_train.shape[0])
-        angle_deg = (Tensor.rand(B) * 2 * ANGLE - ANGLE)
-        scale = 1.0 + (Tensor.rand(B) * 2 * SCALE - SCALE)
-        shift_x = (Tensor.rand(B) * 2 * SHIFT - SHIFT)
-        shift_y = (Tensor.rand(B) * 2 * SHIFT - SHIFT)
-        x = normalize(geometric_transform(X_train[samples], angle_deg, scale, shift_x, shift_y, SAMPLING))
-        opt.zero_grad()
-        loss = model(x).sparse_categorical_crossentropy(Y_train[samples])
-        loss.backward()
-        opt.step()
-        return loss
+  X_train, Y_train, X_test, Y_test = mnist()
+  model = Model()
+  opt = nn.optim.Muon(nn.state.get_parameters(model))
 
-    best_acc, best_since, best_file = 0, 0, None
-    for i in (t := trange(STEPS)):
-        loss = train_step()
-        if i % 10 == 9:
-            acc = (model(normalize(X_test)).argmax(1) == Y_test).mean().item() * 100
-            if acc > best_acc:
-                best_acc, best_since = acc, 0
-                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S%f')
-                best_file = dir_name / f"{model_name}_{timestamp}.safetensors"
-                safe_save(get_state_dict(model), best_file)
-            else:
-                best_since += 1
-            if best_since == PATIENCE:
-                opt.lr *= LR_DECAY
-                best_since = 0
-                if best_file:
-                    load_state_dict(model, safe_load(best_file))
-            t.set_description(f"lr: {opt.lr:.2e} acc: {best_acc:.2f}%")
+  @TinyJit
+  @Tensor.train()
+  def train_step() -> Tensor:
+    samples = Tensor.randint(B, high=int(X_train.shape[0]))
+    angle_deg = (Tensor.rand(B) * 2 * ANGLE - ANGLE)
+    scale = 1.0 + (Tensor.rand(B) * 2 * SCALE - SCALE)
+    shift_x = (Tensor.rand(B) * 2 * SHIFT - SHIFT)
+    shift_y = (Tensor.rand(B) * 2 * SHIFT - SHIFT)
 
-    # EXPORT WEBGPU
-    Device.DEFAULT = "CPU"
-    model = Model()
-    load_state_dict(model, safe_load(best_file))
-    input_tensor = Tensor.randn(1, 1, 28, 28)
-    prg, *_, state = export_model(model, "webgpu", input_tensor, model_name=model_name)
-    with open(dir_name / f"{model_name}.js", "w") as f:
-        f.write(prg)
-    safe_save(state, dir_name / f"{model_name}.webgpu.safetensors")
+    opt.zero_grad()
+    input = normalize(geometric_transform(X_train[samples], angle_deg, scale, shift_x, shift_y, SAMPLING))
+    loss = model(input).sparse_categorical_crossentropy(Y_train[samples]).backward()
+    return loss.realize(*opt.schedule_step())
 
-    # CLEAN
-    for f in glob.glob(str(dir_name / f"{model_name}_*.safetensors")):
-        os.remove(f)
+  @TinyJit
+  def get_test_acc() -> Tensor: return (model(normalize(X_test)).argmax(axis=1) == Y_test).mean() * 100
 
-    print(f"MLP {best_acc:.2f}% → {model_name}.js ({len(prg)//1000} KB) READY!")
+  test_acc, best_acc, best_since = float('nan'), 0, 0
+  best_file = None
+  for i in (t:=trange(getenv("STEPS", 250))):
+    loss = train_step()
+
+    if (i % 10 == 9) and (test_acc := get_test_acc().item()) > best_acc:
+      best_since = 0
+      best_acc = test_acc
+      timestamp = datetime.now().strftime('%Y%m%d_%H%M%S%f')  # Added %f for microseconds
+      state_dict = get_state_dict(model)
+      new_file = dir_name / f"{model_name}_{timestamp}.safetensors"
+      try:
+        safe_save(state_dict, new_file)
+        best_file = new_file
+      except PermissionError:
+        print(f"PermissionError on {new_file}. Skipping save.")
+      continue
+
+    if (best_since := best_since + 1) % PATIENCE == PATIENCE - 1:
+      best_since = 0
+      opt.lr *= LR_DECAY
+      if best_file:
+        try:
+          state_dict = safe_load(best_file)
+          load_state_dict(model, state_dict)
+        except PermissionError:
+          print(f"PermissionError on loading {best_file}. Skipping load.")
+      continue
+
+    t.set_description(f"lr: {opt.lr.item():2.2e}  loss: {loss.item():2.2f}  accuracy: {best_acc:2.2f}%")
+
+  Device.DEFAULT = "WEBGPU"
+  model = Model()
+  if best_file:
+    state_dict = safe_load(best_file)
+  else:
+    raise FileNotFoundError("No safetensors file found in the directory.")
+  load_state_dict(model, state_dict)
+  input = Tensor.randn(1, 1, 28, 28)
+  prg, *_, state = export_model(model, Device.DEFAULT.lower(), input, model_name=model_name)
+  safe_save(state, dir_name / f"{model_name}.webgpu.safetensors")
+  with open(dir_name / f"{model_name}.js", "w") as text_file: text_file.write(prg)
