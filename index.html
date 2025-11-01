@@ -79,12 +79,18 @@
             background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%);
             box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
         }
+        .status {
+            text-sm text-yellow-400 margin-top: 1rem;
+            text-align: center;
+        }
     </style>
 </head>
 <body class="flex flex-col items-center justify-center min-h-screen p-4">
     <div class="w-full max-w-md bg-[#111827] rounded-lg shadow-lg p-6">
         <h1 class="text-2xl font-bold mb-4 text-center">MNIST Digit Classifier</h1>
         <p class="text-center mb-4">Select a model, draw a digit, and see the prediction!</p>
+
+        <div id="status" class="status"></div>
 
         <!-- Model Selection -->
         <div class="mb-4">
@@ -132,14 +138,21 @@
     </div>
 
     <script type="module">
-        // Import models
-        import mnist_mlp from './mnist_mlp/mnist_mlp.js';
-        import mnist_convnet from './mnist_convnet/mnist_convnet.js';
+        // DEBUG: Log the base URL
+        const baseURL = window.location.pathname.split('/').slice(0, -1).join('/') || '/';
+        console.log('Base URL:', baseURL);
+        console.log('Full pathname:', window.location.pathname);
 
         const canvas = document.getElementById('drawing-canvas');
         const ctx = canvas.getContext('2d', { willReadFrequently: true });
         const preview = document.getElementById('preview28');
         const pctx = preview.getContext('2d');
+        const statusDiv = document.getElementById('status');
+
+        function updateStatus(msg) {
+            console.log(msg);
+            statusDiv.textContent = msg;
+        }
 
         function setupHiDPI() {
             const ratio = Math.max(window.devicePixelRatio || 1, 1);
@@ -169,26 +182,57 @@
         let device = null;
 
         async function initWebGPU() {
+            updateStatus('Initializing WebGPU...');
             if (!navigator.gpu) {
-                alert('WebGPU not supported.');
-                return;
+                updateStatus('❌ WebGPU not supported on this browser');
+                alert('WebGPU not supported. Please use Chrome 113+, Firefox 117+, or Edge 113+');
+                return false;
             }
-            const adapter = await navigator.gpu.requestAdapter();
-            device = await adapter.requestDevice();
+            try {
+                const adapter = await navigator.gpu.requestAdapter();
+                device = await adapter.requestDevice();
+                updateStatus('✅ WebGPU ready');
+                return true;
+            } catch (e) {
+                updateStatus('❌ WebGPU error: ' + e.message);
+                console.error(e);
+                return false;
+            }
         }
 
         async function loadModel(modelType) {
-            let modelModule, safetensorsUrl;
-            if (modelType === 'mlp') {
-                modelModule = mnist_mlp;
-                safetensorsUrl = './mnist_mlp/mnist_mlp.webgpu.safetensors';
-            } else {
-                modelModule = mnist_convnet;
-                safetensorsUrl = './mnist_convnet/mnist_convnet.webgpu.safetensors';
+            try {
+                updateStatus(`Loading ${modelType.toUpperCase()} model...`);
+                
+                // Build correct path for GitHub Pages
+                const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                const basePath = isDev ? '.' : '/TinyGrad-MNIST-Classifier';
+                
+                let safetensorsUrl = `${basePath}/${modelType}/${modelType}.webgpu.safetensors`;
+                let moduleUrl = `${basePath}/${modelType}/${modelType}.js`;
+                
+                console.log('Loading safetensors from:', safetensorsUrl);
+                console.log('Loading module from:', moduleUrl);
+                updateStatus(`Fetching: ${safetensorsUrl}`);
+                
+                const response = await fetch(safetensorsUrl);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText} - ${safetensorsUrl}`);
+                }
+                
+                const arrayBuffer = await response.arrayBuffer();
+                const safetensors = new Uint8Array(arrayBuffer);
+                console.log(`Loaded ${safetensors.length} bytes`);
+                
+                // Dynamically import the model
+                const modelModule = await import(moduleUrl);
+                
+                modelRunner = await modelModule.default.setupNet(device, safetensors);
+                updateStatus(`✅ ${modelType.toUpperCase()} loaded!`);
+            } catch (e) {
+                updateStatus(`❌ Error loading model: ${e.message}`);
+                console.error('Model load error:', e);
             }
-
-            const safetensors = await fetch(safetensorsUrl).then(res => res.arrayBuffer()).then(buf => new Uint8Array(buf));
-            modelRunner = await modelModule.setupNet(device, safetensors);
         }
 
         function getImageData28() {
@@ -210,7 +254,6 @@
             pctx.imageSmoothingEnabled = false;
             pctx.clearRect(0, 0, 28, 28);
             pctx.drawImage(tmp, 0, 0, 28, 28);
-            console.log('Input Data:', data);
             return data;
         }
 
@@ -257,20 +300,19 @@
         }
 
         async function runInference() {
-            if (!modelRunner) return;
+            if (!modelRunner) {
+                updateStatus('❌ Model not loaded');
+                return;
+            }
 
             const t0 = performance.now();
             const input = getImageData28();
             const result = await modelRunner(input);
-            
-            // Le modèle retourne un tableau avec un seul élément (Float32Array des logits)
             const logits = result[0];
-            console.log('Logits:', logits);
             
             const probs = softmax(Array.from(logits));
-            console.log('Probabilities:', probs);
-            
             setBars(probs);
+            
             const t1 = performance.now();
             document.getElementById('inference-time').textContent = `Inference Time: ${(t1 - t0).toFixed(2)} ms`;
             updatePreview();
@@ -390,8 +432,10 @@
 
         // Init
         (async () => {
-            await initWebGPU();
-            await loadModel(currentModel);
+            const gpuReady = await initWebGPU();
+            if (gpuReady) {
+                await loadModel(currentModel);
+            }
             updatePreview();
             setInterval(() => {
                 if (autoRun && !drawing) {
