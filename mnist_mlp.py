@@ -131,13 +131,11 @@ if __name__ == "__main__":
 
     t.set_description(f"lr: {opt.lr.item():2.2e}  loss: {loss.item():2.2f}  accuracy: {best_acc:2.2f}%")
 
-  # EXPORT WEBGPU (CPU safe, force realize)
-  Device.DEFAULT = "CPU"
+  Device.DEFAULT = "WEBGPU"
   model = Model()
-  state_dict = safe_load(best_file)
+  state_dict = safe_load(dir_name / f"{model_name}.safetensors")
   load_state_dict(model, state_dict)
   input = Tensor.randn(1, 1, 28, 28)
-  model(input).realize()  # Force jit and realize weights
-  prg, *_, state = export_model(model, "webgpu", input, model_name=model_name)
+  prg, *_, state = export_model(model, Device.DEFAULT.lower(), input, model_name=model_name)
   safe_save(state, dir_name / f"{model_name}.webgpu.safetensors")
   with open(dir_name / f"{model_name}.js", "w") as text_file: text_file.write(prg)
