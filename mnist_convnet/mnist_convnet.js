@@ -266,72 +266,103 @@ var<uniform> INFINITY : f32;
   data0_12800[(alu36+1203)] = (acc0[15]+val31);
 }`;
 
-const r_5_5_16_2_4_2_2 = `fn nan() -> f32 { let bits = 0xffffffffu; return bitcast<f32>(bits); }
+const r_5_5_8_2_2_4_2_2 = `fn nan() -> f32 { let bits = 0xffffffffu; return bitcast<f32>(bits); }
 @group(0) @binding(0)
 var<uniform> INFINITY : f32;
 @group(0) @binding(1)var<storage,read_write>data0_3200:array<f32>;
 @group(0) @binding(2)var<storage,read_write>data1_12800:array<f32>;
-@compute @workgroup_size(16,2) fn main(@builtin(workgroup_id) gindex: vec3<u32>,@builtin(local_invocation_id) lindex: vec3<u32>) {
+@group(0) @binding(3)var<storage,read_write>data2_32:array<f32>;
+@group(0) @binding(4)var<storage,read_write>data3_32:array<f32>;
+@group(0) @binding(5)var<storage,read_write>data4_32:array<f32>;
+@group(0) @binding(6)var<storage,read_write>data5_32:array<f32>;
+@compute @workgroup_size(8,2,2) fn main(@builtin(workgroup_id) gindex: vec3<u32>,@builtin(local_invocation_id) lindex: vec3<u32>) {
   var gidx0 = i32(gindex.x); /* 5 */
   var gidx1 = i32(gindex.y); /* 5 */
-  var lidx0 = i32(lindex.x); /* 16 */
+  var lidx0 = i32(lindex.x); /* 8 */
   var lidx1 = i32(lindex.y); /* 2 */
+  var lidx2 = i32(lindex.z); /* 2 */
   var precast0 = gidx0;
-  var precast1 = lidx1;
+  var precast1 = lidx0;
+  var precast2 = lidx2;
   var cast0 = bitcast<u32>(precast0);
-  var precast2 = (cast0<<2u);
-  var precast3 = (bitcast<u32>(precast1)<<1u);
-  var alu0 = (bitcast<i32>(precast2)+(gidx1*2560)+(lidx0*160)+bitcast<i32>(precast3));
-  var val0 = data1_12800[alu0];
-  var val1 = data1_12800[(alu0+1)];
-  var val2 = data1_12800[(alu0+20)];
-  var val3 = data1_12800[(alu0+21)];
-  var val4 = data1_12800[(alu0+40)];
-  var val5 = data1_12800[(alu0+41)];
-  var val6 = data1_12800[(alu0+60)];
-  var val7 = data1_12800[(alu0+61)];
-  var val8 = data1_12800[(alu0+80)];
-  var val9 = data1_12800[(alu0+81)];
-  var val10 = data1_12800[(alu0+100)];
-  var val11 = data1_12800[(alu0+101)];
-  var val12 = data1_12800[(alu0+120)];
-  var val13 = data1_12800[(alu0+121)];
-  var val14 = data1_12800[(alu0+140)];
-  var val15 = data1_12800[(alu0+141)];
-  var alu1 = (val0*(1/(1.0f+exp2((val0*-1.4426950408889634f)))));
-  var alu2 = (val1*(1/(1.0f+exp2((val1*-1.4426950408889634f)))));
-  var alu3 = (val2*(1/(1.0f+exp2((val2*-1.4426950408889634f)))));
-  var alu4 = (val3*(1/(1.0f+exp2((val3*-1.4426950408889634f)))));
-  var alu5 = (val4*(1/(1.0f+exp2((val4*-1.4426950408889634f)))));
-  var alu6 = (val5*(1/(1.0f+exp2((val5*-1.4426950408889634f)))));
-  var alu7 = (val6*(1/(1.0f+exp2((val6*-1.4426950408889634f)))));
-  var alu8 = (val7*(1/(1.0f+exp2((val7*-1.4426950408889634f)))));
-  var alu9 = (val8*(1/(1.0f+exp2((val8*-1.4426950408889634f)))));
-  var alu10 = (val9*(1/(1.0f+exp2((val9*-1.4426950408889634f)))));
-  var alu11 = (val10*(1/(1.0f+exp2((val10*-1.4426950408889634f)))));
-  var alu12 = (val11*(1/(1.0f+exp2((val11*-1.4426950408889634f)))));
-  var alu13 = (val12*(1/(1.0f+exp2((val12*-1.4426950408889634f)))));
-  var alu14 = (val13*(1/(1.0f+exp2((val13*-1.4426950408889634f)))));
-  var alu15 = (val14*(1/(1.0f+exp2((val14*-1.4426950408889634f)))));
-  var alu16 = (val15*(1/(1.0f+exp2((val15*-1.4426950408889634f)))));
-  var precast4 = (cast0<<1u);
-  var alu17 = (lidx1+bitcast<i32>(precast4)+(gidx1*640)+(lidx0*40));
-  var alu18 = select(alu1,alu3,(alu1<alu3));
-  var alu19 = select(alu5,alu7,(alu5<alu7));
-  var alu20 = select(alu9,alu11,(alu9<alu11));
-  var alu21 = select(alu13,alu15,(alu13<alu15));
-  var alu22 = select(alu18,alu2,(alu18<alu2));
-  var alu23 = select(alu19,alu6,(alu19<alu6));
-  var alu24 = select(alu20,alu10,(alu20<alu10));
-  var alu25 = select(alu21,alu14,(alu21<alu14));
-  var alu26 = select(alu22,alu4,(alu22<alu4));
-  data0_3200[alu17] = alu26;
-  var alu28 = select(alu23,alu8,(alu23<alu8));
-  data0_3200[(alu17+10)] = alu28;
-  var alu30 = select(alu24,alu12,(alu24<alu12));
-  data0_3200[(alu17+20)] = alu30;
-  var alu32 = select(alu25,alu16,(alu25<alu16));
-  data0_3200[(alu17+30)] = alu32;
+  var precast3 = (cast0<<2u);
+  var precast4 = (bitcast<u32>(precast1)<<2u);
+  var cast1 = bitcast<i32>(precast4);
+  var val0 = data4_32[cast1];
+  var val1 = data2_32[cast1];
+  var val2 = data3_32[cast1];
+  var val3 = data5_32[cast1];
+  var alu0 = (cast1+1);
+  var val4 = data4_32[alu0];
+  var val5 = data2_32[alu0];
+  var val6 = data3_32[alu0];
+  var val7 = data5_32[alu0];
+  var alu1 = (cast1+2);
+  var val8 = data4_32[alu1];
+  var val9 = data2_32[alu1];
+  var val10 = data3_32[alu1];
+  var val11 = data5_32[alu1];
+  var alu2 = (cast1+3);
+  var val12 = data4_32[alu2];
+  var val13 = data2_32[alu2];
+  var val14 = data3_32[alu2];
+  var val15 = data5_32[alu2];
+  var precast5 = (bitcast<u32>(precast2)<<1u);
+  var alu3 = (bitcast<i32>(precast3)+(gidx1*80)+(lidx0*1600)+(lidx1*40)+bitcast<i32>(precast5));
+  var val16 = data1_12800[alu3];
+  var val17 = data1_12800[(alu3+1)];
+  var val18 = data1_12800[(alu3+20)];
+  var val19 = data1_12800[(alu3+21)];
+  var val20 = data1_12800[(alu3+400)];
+  var val21 = data1_12800[(alu3+401)];
+  var val22 = data1_12800[(alu3+420)];
+  var val23 = data1_12800[(alu3+421)];
+  var val24 = data1_12800[(alu3+800)];
+  var val25 = data1_12800[(alu3+801)];
+  var val26 = data1_12800[(alu3+820)];
+  var val27 = data1_12800[(alu3+821)];
+  var val28 = data1_12800[(alu3+1200)];
+  var val29 = data1_12800[(alu3+1201)];
+  var val30 = data1_12800[(alu3+1220)];
+  var val31 = data1_12800[(alu3+1221)];
+  var alu4 = (1/sqrt((val0+1e-05f)));
+  var alu5 = (1/sqrt((val4+1e-05f)));
+  var alu6 = (1/sqrt((val8+1e-05f)));
+  var alu7 = (1/sqrt((val12+1e-05f)));
+  var precast6 = (cast0<<1u);
+  var alu8 = (lidx2+bitcast<i32>(precast6)+(gidx1*20)+(lidx0*400)+(lidx1*10));
+  var alu9 = ((((val16*(1/(1.0f+exp2((val16*-1.4426950408889634f)))))-val1)*val2*alu4)+val3);
+  var alu10 = ((((val17*(1/(1.0f+exp2((val17*-1.4426950408889634f)))))-val1)*val2*alu4)+val3);
+  var alu11 = ((((val18*(1/(1.0f+exp2((val18*-1.4426950408889634f)))))-val1)*val2*alu4)+val3);
+  var alu12 = ((((val19*(1/(1.0f+exp2((val19*-1.4426950408889634f)))))-val1)*val2*alu4)+val3);
+  var alu13 = ((((val20*(1/(1.0f+exp2((val20*-1.4426950408889634f)))))-val5)*val6*alu5)+val7);
+  var alu14 = ((((val21*(1/(1.0f+exp2((val21*-1.4426950408889634f)))))-val5)*val6*alu5)+val7);
+  var alu15 = ((((val22*(1/(1.0f+exp2((val22*-1.4426950408889634f)))))-val5)*val6*alu5)+val7);
+  var alu16 = ((((val23*(1/(1.0f+exp2((val23*-1.4426950408889634f)))))-val5)*val6*alu5)+val7);
+  var alu17 = ((((val24*(1/(1.0f+exp2((val24*-1.4426950408889634f)))))-val9)*val10*alu6)+val11);
+  var alu18 = ((((val25*(1/(1.0f+exp2((val25*-1.4426950408889634f)))))-val9)*val10*alu6)+val11);
+  var alu19 = ((((val26*(1/(1.0f+exp2((val26*-1.4426950408889634f)))))-val9)*val10*alu6)+val11);
+  var alu20 = ((((val27*(1/(1.0f+exp2((val27*-1.4426950408889634f)))))-val9)*val10*alu6)+val11);
+  var alu21 = ((((val28*(1/(1.0f+exp2((val28*-1.4426950408889634f)))))-val13)*val14*alu7)+val15);
+  var alu22 = ((((val29*(1/(1.0f+exp2((val29*-1.4426950408889634f)))))-val13)*val14*alu7)+val15);
+  var alu23 = ((((val30*(1/(1.0f+exp2((val30*-1.4426950408889634f)))))-val13)*val14*alu7)+val15);
+  var alu24 = ((((val31*(1/(1.0f+exp2((val31*-1.4426950408889634f)))))-val13)*val14*alu7)+val15);
+  var alu25 = select(alu9,alu11,(alu9<alu11));
+  var alu26 = select(alu13,alu15,(alu13<alu15));
+  var alu27 = select(alu17,alu19,(alu17<alu19));
+  var alu28 = select(alu21,alu23,(alu21<alu23));
+  var alu29 = select(alu25,alu10,(alu25<alu10));
+  var alu30 = select(alu26,alu14,(alu26<alu14));
+  var alu31 = select(alu27,alu18,(alu27<alu18));
+  var alu32 = select(alu28,alu22,(alu28<alu22));
+  var alu33 = select(alu29,alu12,(alu29<alu12));
+  data0_3200[alu8] = alu33;
+  var alu35 = select(alu30,alu16,(alu30<alu16));
+  data0_3200[(alu8+100)] = alu35;
+  var alu37 = select(alu31,alu20,(alu31<alu20));
+  data0_3200[(alu8+200)] = alu37;
+  var alu39 = select(alu32,alu24,(alu32<alu24));
+  data0_3200[(alu8+300)] = alu39;
 }`;
 
 const r_2_8_8_2_4_4_32_3_3 = `fn nan() -> f32 { let bits = 0xffffffffu; return bitcast<f32>(bits); }
@@ -552,30 +583,43 @@ var<uniform> INFINITY : f32;
   data0_2304[(alu10+2)] = (acc0[2]+val24);
 }`;
 
-const r_6_32_3_2_2 = `fn nan() -> f32 { let bits = 0xffffffffu; return bitcast<f32>(bits); }
+const r_8_8_3_3_2_2 = `fn nan() -> f32 { let bits = 0xffffffffu; return bitcast<f32>(bits); }
 @group(0) @binding(0)
 var<uniform> INFINITY : f32;
 @group(0) @binding(1)var<storage,read_write>data0_576:array<f32>;
 @group(0) @binding(2)var<storage,read_write>data1_2304:array<f32>;
-@compute @workgroup_size(32,3) fn main(@builtin(workgroup_id) gindex: vec3<u32>,@builtin(local_invocation_id) lindex: vec3<u32>) {
-  var gidx0 = i32(gindex.x); /* 6 */
-  var lidx0 = i32(lindex.x); /* 32 */
+@group(0) @binding(3)var<storage,read_write>data2_64:array<f32>;
+@group(0) @binding(4)var<storage,read_write>data3_64:array<f32>;
+@group(0) @binding(5)var<storage,read_write>data4_64:array<f32>;
+@group(0) @binding(6)var<storage,read_write>data5_64:array<f32>;
+@compute @workgroup_size(8,3,3) fn main(@builtin(workgroup_id) gindex: vec3<u32>,@builtin(local_invocation_id) lindex: vec3<u32>) {
+  var gidx0 = i32(gindex.x); /* 8 */
+  var lidx0 = i32(lindex.x); /* 8 */
   var lidx1 = i32(lindex.y); /* 3 */
-  var precast0 = lidx1;
-  var precast1 = (bitcast<u32>(precast0)<<1u);
-  var alu0 = ((gidx0*384)+(lidx0*12)+bitcast<i32>(precast1));
-  var val0 = data1_2304[alu0];
-  var val1 = data1_2304[(alu0+1)];
-  var val2 = data1_2304[(alu0+6)];
-  var val3 = data1_2304[(alu0+7)];
-  var alu1 = (val1*(1/(1.0f+exp2((val1*-1.4426950408889634f)))));
-  var alu2 = (val2*(1/(1.0f+exp2((val2*-1.4426950408889634f)))));
-  var alu3 = (val3*(1/(1.0f+exp2((val3*-1.4426950408889634f)))));
-  var alu4 = (val0*(1/(1.0f+exp2((val0*-1.4426950408889634f)))));
-  var alu5 = select(alu4,alu2,(alu4<alu2));
-  var alu6 = select(alu5,alu1,(alu5<alu1));
-  var alu7 = select(alu6,alu3,(alu6<alu3));
-  data0_576[(lidx1+(gidx0*96)+(lidx0*3))] = alu7;
+  var lidx2 = i32(lindex.z); /* 3 */
+  var precast0 = gidx0;
+  var precast1 = lidx2;
+  var precast2 = (bitcast<u32>(precast0)<<3u);
+  var alu0 = (lidx0+bitcast<i32>(precast2));
+  var val0 = data2_64[alu0];
+  var val1 = data3_64[alu0];
+  var val2 = data4_64[alu0];
+  var val3 = data5_64[alu0];
+  var precast3 = (bitcast<u32>(precast1)<<1u);
+  var alu1 = ((gidx0*288)+(lidx0*36)+(lidx1*12)+bitcast<i32>(precast3));
+  var val4 = data1_2304[alu1];
+  var val5 = data1_2304[(alu1+1)];
+  var val6 = data1_2304[(alu1+6)];
+  var val7 = data1_2304[(alu1+7)];
+  var alu2 = (1/sqrt((val2+1e-05f)));
+  var alu3 = ((((val5*(1/(1.0f+exp2((val5*-1.4426950408889634f)))))-val0)*val1*alu2)+val3);
+  var alu4 = ((((val6*(1/(1.0f+exp2((val6*-1.4426950408889634f)))))-val0)*val1*alu2)+val3);
+  var alu5 = ((((val7*(1/(1.0f+exp2((val7*-1.4426950408889634f)))))-val0)*val1*alu2)+val3);
+  var alu6 = ((((val4*(1/(1.0f+exp2((val4*-1.4426950408889634f)))))-val0)*val1*alu2)+val3);
+  var alu7 = select(alu6,alu4,(alu6<alu4));
+  var alu8 = select(alu7,alu3,(alu7<alu3));
+  var alu9 = select(alu8,alu5,(alu8<alu5));
+  data0_576[(lidx2+(gidx0*72)+(lidx0*9)+(lidx1*3))] = alu9;
 }`;
 
 const r_10_16_36 = `fn nan() -> f32 { let bits = 0xffffffffu; return bitcast<f32>(bits); }
@@ -615,7 +659,7 @@ const setupNet = async (device, safetensor) => {
     const metadata = getTensorMetadata(safetensor);
     const infinityBuf = createInfinityUniformBuf(device);
 
-    const layouts=[device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'uniform' }}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },{binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },{binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },{binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } }]}),device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'uniform' }}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },{binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },{binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },{binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } }]}),device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'uniform' }}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },{binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } }]}),device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'uniform' }}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },{binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },{binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },{binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } }]}),device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'uniform' }}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },{binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },{binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },{binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } }]}),device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'uniform' }}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },{binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } }]}),device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'uniform' }}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },{binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },{binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },{binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } }]})]
+    const layouts=[device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'uniform' }}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },{binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },{binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },{binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } }]}),device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'uniform' }}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },{binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },{binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },{binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } }]}),device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'uniform' }}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },{binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },{binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },{binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },{binding: 5, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },{binding: 6, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } }]}),device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'uniform' }}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },{binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },{binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },{binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } }]}),device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'uniform' }}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },{binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },{binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },{binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } }]}),device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'uniform' }}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },{binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },{binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },{binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },{binding: 5, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },{binding: 6, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } }]}),device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'uniform' }}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },{binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },{binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },{binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } }]})]
 
     const buf_0 = createEmptyBuf(device, 73728);;
     const input0 = createEmptyBuf(device, 3136);;
@@ -625,22 +669,30 @@ const setupNet = async (device, safetensor) => {
     const buf_4 = createWeightBuf(device, 102400, getTensorBuffer(safetensor, metadata['layers.2.weight']));
     const buf_5 = createWeightBuf(device, 128, getTensorBuffer(safetensor, metadata['layers.2.bias']));
     const buf_6 = createEmptyBuf(device, 12800);;
-    const buf_7 = createEmptyBuf(device, 16384);;
-    const buf_8 = createWeightBuf(device, 73728, getTensorBuffer(safetensor, metadata['layers.5.weight']));
-    const buf_9 = createWeightBuf(device, 256, getTensorBuffer(safetensor, metadata['layers.5.bias']));
-    const buf_10 = createEmptyBuf(device, 9216);;
-    const buf_11 = createWeightBuf(device, 147456, getTensorBuffer(safetensor, metadata['layers.7.weight']));
-    const buf_12 = createWeightBuf(device, 256, getTensorBuffer(safetensor, metadata['layers.7.bias']));
-    const buf_13 = createEmptyBuf(device, 2304);;
+    const buf_7 = createWeightBuf(device, 128, getTensorBuffer(safetensor, metadata['layers.4.running_mean']));
+    const buf_8 = createWeightBuf(device, 128, getTensorBuffer(safetensor, metadata['layers.4.weight']));
+    const buf_9 = createWeightBuf(device, 128, getTensorBuffer(safetensor, metadata['layers.4.running_var']));
+    const buf_10 = createWeightBuf(device, 128, getTensorBuffer(safetensor, metadata['layers.4.bias']));
+    const buf_11 = createEmptyBuf(device, 16384);;
+    const buf_12 = createWeightBuf(device, 73728, getTensorBuffer(safetensor, metadata['layers.6.weight']));
+    const buf_13 = createWeightBuf(device, 256, getTensorBuffer(safetensor, metadata['layers.6.bias']));
+    const buf_14 = createEmptyBuf(device, 9216);;
+    const buf_15 = createWeightBuf(device, 147456, getTensorBuffer(safetensor, metadata['layers.8.weight']));
+    const buf_16 = createWeightBuf(device, 256, getTensorBuffer(safetensor, metadata['layers.8.bias']));
+    const buf_17 = createEmptyBuf(device, 2304);;
+    const buf_18 = createWeightBuf(device, 256, getTensorBuffer(safetensor, metadata['layers.10.running_mean']));
+    const buf_19 = createWeightBuf(device, 256, getTensorBuffer(safetensor, metadata['layers.10.weight']));
+    const buf_20 = createWeightBuf(device, 256, getTensorBuffer(safetensor, metadata['layers.10.running_var']));
+    const buf_21 = createWeightBuf(device, 256, getTensorBuffer(safetensor, metadata['layers.10.bias']));
     const output0 = createEmptyBuf(device, 40);;
-    const buf_14 = createWeightBuf(device, 23040, getTensorBuffer(safetensor, metadata['layers.11.weight']));
-    const buf_15 = createWeightBuf(device, 40, getTensorBuffer(safetensor, metadata['layers.11.bias']));
+    const buf_22 = createWeightBuf(device, 23040, getTensorBuffer(safetensor, metadata['layers.13.weight']));
+    const buf_23 = createWeightBuf(device, 40, getTensorBuffer(safetensor, metadata['layers.13.bias']));
 
     const gpuWriteBuffer0 = device.createBuffer({size:input0.size, usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE });
 
     const gpuReadBuffer0 = device.createBuffer({size:output0.size, usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ });
 
-    const kernels = [r_4_3_2_8_8_3_4_5_5, r_5_5_8_4_4_4_32_5_5, r_5_5_16_2_4_2_2, r_2_8_8_2_4_4_32_3_3, r_4_2_16_3_2_3_64_3_3, r_6_32_3_2_2, r_10_16_36];
+    const kernels = [r_4_3_2_8_8_3_4_5_5, r_5_5_8_4_4_4_32_5_5, r_5_5_8_2_2_4_2_2, r_2_8_8_2_4_4_32_3_3, r_4_2_16_3_2_3_64_3_3, r_8_8_3_3_2_2, r_10_16_36];
     const pipelines = await Promise.all(kernels.map(async (name, i) => {
       return await device.createComputePipelineAsync({
           layout: device.createPipelineLayout({
@@ -663,11 +715,11 @@ const setupNet = async (device, safetensor) => {
         commandEncoder.copyBufferToBuffer(gpuWriteBuffer0, 0, input0, 0, gpuWriteBuffer0.size);
         addComputePass(device, commandEncoder, pipelines[0], layouts[0], infinityBuf, [buf_0, input0, buf_1, buf_2], [3, 4, 1]);
         addComputePass(device, commandEncoder, pipelines[1], layouts[1], infinityBuf, [buf_3, buf_0, buf_4, buf_5], [5, 5, 1]);
-        addComputePass(device, commandEncoder, pipelines[2], layouts[2], infinityBuf, [buf_6, buf_3], [5, 5, 1]);
-        addComputePass(device, commandEncoder, pipelines[3], layouts[3], infinityBuf, [buf_7, buf_6, buf_8, buf_9], [2, 1, 1]);
-        addComputePass(device, commandEncoder, pipelines[4], layouts[4], infinityBuf, [buf_10, buf_7, buf_11, buf_12], [2, 4, 1]);
-        addComputePass(device, commandEncoder, pipelines[5], layouts[5], infinityBuf, [buf_13, buf_10], [6, 1, 1]);
-        addComputePass(device, commandEncoder, pipelines[6], layouts[6], infinityBuf, [output0, buf_13, buf_14, buf_15], [10, 1, 1]);
+        addComputePass(device, commandEncoder, pipelines[2], layouts[2], infinityBuf, [buf_6, buf_3, buf_7, buf_8, buf_9, buf_10], [5, 5, 1]);
+        addComputePass(device, commandEncoder, pipelines[3], layouts[3], infinityBuf, [buf_11, buf_6, buf_12, buf_13], [2, 1, 1]);
+        addComputePass(device, commandEncoder, pipelines[4], layouts[4], infinityBuf, [buf_14, buf_11, buf_15, buf_16], [2, 4, 1]);
+        addComputePass(device, commandEncoder, pipelines[5], layouts[5], infinityBuf, [buf_17, buf_14, buf_18, buf_19, buf_20, buf_21], [8, 1, 1]);
+        addComputePass(device, commandEncoder, pipelines[6], layouts[6], infinityBuf, [output0, buf_17, buf_22, buf_23], [10, 1, 1]);
         commandEncoder.copyBufferToBuffer(output0, 0, gpuReadBuffer0, 0, output0.size);
         const gpuCommands = commandEncoder.finish();
         device.queue.submit([gpuCommands]);
