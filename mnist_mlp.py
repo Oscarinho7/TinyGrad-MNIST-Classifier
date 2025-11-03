@@ -7,8 +7,8 @@ from tinygrad.helpers import getenv, trange
 from tinygrad.nn.datasets import mnist
 from tinygrad.nn.state import get_state_dict, load_state_dict, safe_load, safe_save
 from export_model import export_model
+
 import math
-from datetime import datetime
 
 class SamplingMod(Enum):
   BILINEAR = 0
@@ -32,12 +32,13 @@ def geometric_transform(X: Tensor, angle_deg: Tensor, scale: Tensor, shift_x: Te
     coords_homo = Tensor.cat(coords, Tensor.ones(H * W, 1), dim=1).reshape(1, H * W, 3).expand(B, H * W, 3)
     transformed_coords = coords_homo.matmul(affine_matrix.permute(0, 2, 1))
 
-    if sampling == SamplingMod.NEAREST:
+    match sampling:
+      case SamplingMod.NEAREST:
         x_idx = transformed_coords[:, :, 0].round().clip(0, W - 1).int()
         y_idx = transformed_coords[:, :, 1].round().clip(0, H - 1).int()
         return X.reshape(B, C * H * W).gather(1, y_idx * W + x_idx).reshape(B, C, H, W)
 
-    elif sampling == SamplingMod.BILINEAR:
+      case SamplingMod.BILINEAR:
         x_prime, y_prime = transformed_coords[:, :, 0],  transformed_coords[:, :, 1]
         x0, y0 = x_prime.floor().int(), y_prime.floor().int()
         dx, dy = x_prime - x0.float(), y_prime - y0.float()
@@ -76,10 +77,10 @@ class Model:
   def __call__(self, x:Tensor) -> Tensor: return x.sequential(self.layers)
 
 if __name__ == "__main__":
-  B = int(getenv("BATCH", 256))
-  LR = float(getenv("LR", 0.003))
-  LR_DECAY = float(getenv("LR_DECAY", 0.95))
-  PATIENCE = float(getenv("PATIENCE", 75))
+  B = int(getenv("BATCH", 512))
+  LR = float(getenv("LR", 0.02))
+  LR_DECAY = float(getenv("LR_DECAY", 0.9))
+  PATIENCE = float(getenv("PATIENCE", 50))
 
   ANGLE = float(getenv("ANGLE", 15))
   SCALE = float(getenv("SCALE", 0.1))
@@ -112,42 +113,27 @@ if __name__ == "__main__":
   def get_test_acc() -> Tensor: return (model(normalize(X_test)).argmax(axis=1) == Y_test).mean() * 100
 
   test_acc, best_acc, best_since = float('nan'), 0, 0
-  best_file = None
-  for i in (t:=trange(getenv("STEPS", 250))):
+  for i in (t:=trange(getenv("STEPS", 70))):
     loss = train_step()
 
     if (i % 10 == 9) and (test_acc := get_test_acc().item()) > best_acc:
       best_since = 0
       best_acc = test_acc
-      timestamp = datetime.now().strftime('%Y%m%d_%H%M%S%f')  # Added %f for microseconds
       state_dict = get_state_dict(model)
-      new_file = dir_name / f"{model_name}_{timestamp}.safetensors"
-      try:
-        safe_save(state_dict, new_file)
-        best_file = new_file
-      except PermissionError:
-        print(f"PermissionError on {new_file}. Skipping save.")
+      safe_save(state_dict, dir_name / f"{model_name}.safetensors")
       continue
 
     if (best_since := best_since + 1) % PATIENCE == PATIENCE - 1:
       best_since = 0
       opt.lr *= LR_DECAY
-      if best_file:
-        try:
-          state_dict = safe_load(best_file)
-          load_state_dict(model, state_dict)
-        except PermissionError:
-          print(f"PermissionError on loading {best_file}. Skipping load.")
-      continue
+      state_dict = safe_load(dir_name / f"{model_name}.safetensors")
+      load_state_dict(model, state_dict)
 
     t.set_description(f"lr: {opt.lr.item():2.2e}  loss: {loss.item():2.2f}  accuracy: {best_acc:2.2f}%")
 
   Device.DEFAULT = "WEBGPU"
   model = Model()
-  if best_file:
-    state_dict = safe_load(best_file)
-  else:
-    raise FileNotFoundError("No safetensors file found in the directory.")
+  state_dict = safe_load(dir_name / f"{model_name}.safetensors")
   load_state_dict(model, state_dict)
   input = Tensor.randn(1, 1, 28, 28)
   prg, *_, state = export_model(model, Device.DEFAULT.lower(), input, model_name=model_name)

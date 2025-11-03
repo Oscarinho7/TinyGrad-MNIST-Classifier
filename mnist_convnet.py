@@ -7,8 +7,8 @@ from tinygrad.helpers import getenv, trange
 from tinygrad.nn.datasets import mnist
 from tinygrad.nn.state import get_state_dict, load_state_dict, safe_load, safe_save
 from export_model import export_model
+
 import math
-from datetime import datetime
 
 class SamplingMod(Enum):
   BILINEAR = 0
@@ -70,20 +70,20 @@ class Model:
     self.layers: list[Callable[[Tensor], Tensor]] = [
       nn.Conv2d(1, 32, 5), Tensor.silu,
       nn.Conv2d(32, 32, 5), Tensor.silu,
-      Tensor.max_pool2d,
+      nn.BatchNorm(32), Tensor.max_pool2d,
       nn.Conv2d(32, 64, 3), Tensor.silu,
       nn.Conv2d(64, 64, 3), Tensor.silu,
-       Tensor.max_pool2d,
+      nn.BatchNorm(64), Tensor.max_pool2d,
       lambda x: x.flatten(1), nn.Linear(576, 10),
     ]
 
   def __call__(self, x:Tensor) -> Tensor: return x.sequential(self.layers)
 
 if __name__ == "__main__":
-  B = int(getenv("BATCH", 128))
-  LR = float(getenv("LR", 0.003))
-  LR_DECAY = float(getenv("LR_DECAY", 0.95))
-  PATIENCE = float(getenv("PATIENCE", 75))
+  B = int(getenv("BATCH", 512))
+  LR = float(getenv("LR", 0.02))
+  LR_DECAY = float(getenv("LR_DECAY", 0.9))
+  PATIENCE = float(getenv("PATIENCE", 50))
 
   ANGLE = float(getenv("ANGLE", 15))
   SCALE = float(getenv("SCALE", 0.1))
@@ -116,42 +116,27 @@ if __name__ == "__main__":
   def get_test_acc() -> Tensor: return (model(normalize(X_test)).argmax(axis=1) == Y_test).mean() * 100
 
   test_acc, best_acc, best_since = float('nan'), 0, 0
-  best_file = None
-  for i in (t:=trange(getenv("STEPS", 250))):
+  for i in (t:=trange(getenv("STEPS", 70))):
     loss = train_step()
 
     if (i % 10 == 9) and (test_acc := get_test_acc().item()) > best_acc:
       best_since = 0
       best_acc = test_acc
-      timestamp = datetime.now().strftime('%Y%m%d_%H%M%S%f')  # Added %f for microseconds
       state_dict = get_state_dict(model)
-      new_file = dir_name / f"{model_name}_{timestamp}.safetensors"
-      try:
-        safe_save(state_dict, new_file)
-        best_file = new_file
-      except PermissionError:
-        print(f"PermissionError on {new_file}. Skipping save.")
+      safe_save(state_dict, dir_name / f"{model_name}.safetensors")
       continue
 
     if (best_since := best_since + 1) % PATIENCE == PATIENCE - 1:
       best_since = 0
       opt.lr *= LR_DECAY
-      if best_file:
-        try:
-          state_dict = safe_load(best_file)
-          load_state_dict(model, state_dict)
-        except PermissionError:
-          print(f"PermissionError on loading {best_file}. Skipping load.")
-      continue
+      state_dict = safe_load(dir_name / f"{model_name}.safetensors")
+      load_state_dict(model, state_dict)
 
     t.set_description(f"lr: {opt.lr.item():2.2e}  loss: {loss.item():2.2f}  accuracy: {best_acc:2.2f}%")
 
   Device.DEFAULT = "WEBGPU"
   model = Model()
-  if best_file:
-    state_dict = safe_load(best_file)
-  else:
-    raise FileNotFoundError("No safetensors file found in the directory.")
+  state_dict = safe_load(dir_name / f"{model_name}.safetensors")
   load_state_dict(model, state_dict)
   input = Tensor.randn(1, 1, 28, 28)
   prg, *_, state = export_model(model, Device.DEFAULT.lower(), input, model_name=model_name)
