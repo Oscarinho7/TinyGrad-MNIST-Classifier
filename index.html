@@ -133,8 +133,9 @@
 
     <script type="module">
         // Import models
-        import mnist_mlp from './mnist_mlp/mnist_mlp.js';
-        import mnist_convnet from './mnist_convnet/mnist_convnet.js';
+        import mnist_mlp from '/TinyGrad-MNIST-Classifier/mnist_mlp/mnist_mlp.js';
+        import mnist_convnet from '/TinyGrad-MNIST-Classifier/mnist_convnet/mnist_convnet.js';
+
 
         const canvas = document.getElementById('drawing-canvas');
         const ctx = canvas.getContext('2d', { willReadFrequently: true });
@@ -167,7 +168,7 @@
         let currentModel = 'mlp';
         let modelRunner = null;
         let device = null;
-
+        
         async function initWebGPU() {
             if (!navigator.gpu) {
                 alert('WebGPU not supported.');
@@ -181,10 +182,12 @@
             let modelModule, safetensorsUrl;
             if (modelType === 'mlp') {
                 modelModule = mnist_mlp;
-                safetensorsUrl = './mnist_mlp/mnist_mlp.webgpu.safetensors';
+                safetensorsUrl = '/TinyGrad-MNIST-Classifier/mnist_mlp/mnist_mlp.webgpu.safetensors';
+
             } else {
                 modelModule = mnist_convnet;
-                safetensorsUrl = './mnist_convnet/mnist_convnet.webgpu.safetensors';
+                safetensorsUrl = '/TinyGrad-MNIST-Classifier/mnist_convnet/mnist_convnet.webgpu.safetensors';
+
             }
 
             const safetensors = await fetch(safetensorsUrl).then(res => res.arrayBuffer()).then(buf => new Uint8Array(buf));
