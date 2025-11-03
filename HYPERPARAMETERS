@@ -116,6 +116,7 @@ Architecture: 2 conv blocks WITHOUT BatchNorm
 
 ## Goals Achieved
 
-- ✅ MLP: 96.65% (target ≥95%)
-- ✅ CNN: 98.36% (target ≥98%)
-- ✅ Solid hyperparameter insights
+- MLP: 96.65% (target ≥95%)
+- CNN: 98.36% (target ≥98%)
+- Solid hyperparameter insights
+
