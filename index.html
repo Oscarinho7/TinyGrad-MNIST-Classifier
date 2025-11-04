@@ -178,22 +178,21 @@
             device = await adapter.requestDevice();
         }
 
-        async function loadModel(modelType) {
-            let modelModule, safetensorsUrl;
-            if (modelType === 'mlp') {
-                modelModule = mnist_mlp;
-                safetensorsUrl = '/TinyGrad-MNIST-Classifier/mnist_mlp/mnist_mlp.webgpu.safetensors';
+        const loadModel = async (modelName) => {
+            const base = 'https://oscarinho7.github.io/TinyGrad-MNIST-Classifier';
+            const jsPath = `${base}/${modelName}/${modelName}.js`;
+            const netPath = `${base}/${modelName}/${modelName}.webgpu.safetensors`;
 
-            } else {
-                modelModule = mnist_convnet;
-                safetensorsUrl = '/TinyGrad-MNIST-Classifier/mnist_convnet/mnist_convnet.webgpu.safetensors';
-
-            }
-
-            const safetensors = await fetch(safetensorsUrl).then(res => res.arrayBuffer()).then(buf => new Uint8Array(buf));
-            modelRunner = await modelModule.setupNet(device, safetensors);
-        }
-
+            try {
+                statusText.innerHTML = 'Loading model...';
+                const device = await getDevice();
+                const tinygrad = (await import(jsPath)).default;
+                net = await tinygrad.load(device, netPath);
+                statusText.innerHTML = 'Ready - start drawing!';
+                } catch (e) {
+                 error(e);
+                        }
+            };
         function getImageData28() {
             const tmp = document.createElement('canvas');
             tmp.width = 28;
