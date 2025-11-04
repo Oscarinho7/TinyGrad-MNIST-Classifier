@@ -14,6 +14,7 @@
 | #6  | 256   | 0.005| 0.95 | 200  | 95.97% | 0.20 | Narrower (512→256) |
 | #7  | 512   | 0.01 | 0.93 | 150  | 96.44% | 0.15 | Fast, low loss |
 | #8  | 256   | 0.005| 0.98 | 300  | 96.34% | 0.18 | ReLU activation |
+| **#9** | **1024** | **0.003** | **0.95** | **1000** | **98.67%** | **0.04** | **ULTRA-OPTIMIZED but Longer ** |
 
 **Key Findings:**
 - **Optimal LR:** 0.003-0.005 (too high → oscillation, too low → slow)
@@ -66,7 +67,7 @@
 
 ## Best Models Summary
 
-### MLP - Experiment #3 ✓
+### MLP - Experiment #3 ✓ (excluding the bonus experiment with 98%+ accuracy)
 ```
 Batch: 256 | LR: 0.003 | Decay: 0.95 | Steps: 250
 Architecture: 784 → 512 (SiLU) → 512 (SiLU) → 10
@@ -119,4 +120,5 @@ Architecture: 2 conv blocks WITHOUT BatchNorm
 - MLP: 96.65% (target ≥95%)
 - CNN: 98.36% (target ≥98%)
 - Solid hyperparameter insights
+
 
