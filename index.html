@@ -133,7 +133,8 @@
 
     <script type="module">
         // Import models
-        
+        import mnist_mlp from './mnist_mlp/mnist_mlp.js';
+        import mnist_convnet from './mnist_convnet/mnist_convnet.js';
 
         const canvas = document.getElementById('drawing-canvas');
         const ctx = canvas.getContext('2d', { willReadFrequently: true });
@@ -167,39 +168,28 @@
         let modelRunner = null;
         let device = null;
 
-        async function getDevice() {
+        async function initWebGPU() {
             if (!navigator.gpu) {
-                alert("WebGPU not supported on this browser.");
-                throw new Error("WebGPU not supported.");
+                alert('WebGPU not supported.');
+                return;
             }
             const adapter = await navigator.gpu.requestAdapter();
-            return await adapter.requestDevice({
-                requiredFeatures: ["shader-f16"],
-                powerPreference: "high-performance",
-            });
+            device = await adapter.requestDevice();
         }
-
 
         async function loadModel(modelType) {
-            let modelName;
-            if (modelType === 'mlp') modelName = 'mnist_mlp';
-            else modelName = 'mnist_convnet';
-
-            const jsPath = `./${modelName}/${modelName}.js`;
-            const netPath = `./${modelName}/${modelName}.webgpu.safetensors`;
-
-            try {
-                document.getElementById('best-guess').textContent = "Loading model...";
-                const device = await getDevice();
-                const tinygrad = (await import(jsPath)).default;
-                modelRunner = await tinygrad.load(device, netPath);
-                document.getElementById('best-guess').textContent = "Model ready!";
-            } catch (e) {
-                console.error(e);
-                document.getElementById('best-guess').textContent = "Model load failed.";
+            let modelModule, safetensorsUrl;
+            if (modelType === 'mlp') {
+                modelModule = mnist_mlp;
+                safetensorsUrl = './mnist_mlp/mnist_mlp.webgpu.safetensors';
+            } else {
+                modelModule = mnist_convnet;
+                safetensorsUrl = './mnist_convnet/mnist_convnet.webgpu.safetensors';
             }
-        }
 
+            const safetensors = await fetch(safetensorsUrl).then(res => res.arrayBuffer()).then(buf => new Uint8Array(buf));
+            modelRunner = await modelModule.setupNet(device, safetensors);
+        }
 
         function getImageData28() {
             const tmp = document.createElement('canvas');
@@ -268,20 +258,23 @@
 
         async function runInference() {
             if (!modelRunner) return;
+
             const t0 = performance.now();
-
             const input = getImageData28();
-            const res = await modelRunner(input);
-
-            const logits = Array.from(new Float32Array(res[0]));
-            const probs = softmax(logits);
-
+            const result = await modelRunner(input);
+            
+            // Le modèle retourne un tableau avec un seul élément (Float32Array des logits)
+            const logits = result[0];
+            console.log('Logits:', logits);
+            
+            const probs = softmax(Array.from(logits));
+            console.log('Probabilities:', probs);
+            
             setBars(probs);
-
             const t1 = performance.now();
             document.getElementById('inference-time').textContent = `Inference Time: ${(t1 - t0).toFixed(2)} ms`;
+            updatePreview();
         }
-
 
         function resetPrediction() {
             for (let i = 0; i < 10; i++) {
@@ -397,13 +390,15 @@
 
         // Init
         (async () => {
-            ctx.fillStyle = 'black';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
+            await initWebGPU();
             await loadModel(currentModel);
             updatePreview();
+            setInterval(() => {
+                if (autoRun && !drawing) {
+                    runInference();
+                }
+            }, 600);
         })();
-
     </script>
 </body>
 </html>
