@@ -68,10 +68,13 @@ def normalize(X: Tensor) -> Tensor:
 class Model:
   def __init__(self):
     self.layers: list[Callable[[Tensor], Tensor]] = [
-      lambda x: x.flatten(1),
-      nn.Linear(784, 512), Tensor.silu,
-      nn.Linear(512, 512), Tensor.silu,
-      nn.Linear(512, 10),
+      nn.Conv2d(1, 32, 5), Tensor.silu,
+      nn.Conv2d(32, 32, 5), Tensor.silu,
+      nn.BatchNorm(32), Tensor.max_pool2d,
+      nn.Conv2d(32, 64, 3), Tensor.silu,
+      nn.Conv2d(64, 64, 3), Tensor.silu,
+      nn.BatchNorm(64), Tensor.max_pool2d,
+      lambda x: x.flatten(1), nn.Linear(576, 10),
     ]
 
   def __call__(self, x:Tensor) -> Tensor: return x.sequential(self.layers)
