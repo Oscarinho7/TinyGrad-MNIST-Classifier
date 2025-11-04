@@ -1,6 +1,6 @@
 # MNIST Digit Classifier with WebGPU & tinygrad
 ![Aperçu du projet](images/mnist_img.png)
-https://youtu.be/SgQLvMati7A
+![Vidéo du projet](https://youtu.be/SgQLvMati7A)
 ---
 
 ## Overview
@@ -53,6 +53,7 @@ All inference runs **client-side**, **no server**, **no backend**, **no TensorFl
 ## Hyperparameter Log
 
 For full details on all experiments, configurations, and results, see the [HYPERPARAMETERS.md](HYPERPARAMETERS.md) file.
+
 
 
 
