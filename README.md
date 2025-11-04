@@ -4,6 +4,7 @@
 https://youtu.be/SgQLvMati7A
 ---
 
+Live demo : https://oscarinho7.github.io/TinyGrad-MNIST-Classifier/
 ## Overview
 
 This project implements **two neural networks** (MLP and CNN) trained on the **MNIST dataset** using **tinygrad**, then **exported to WebGPU** for **real-time inference directly in the browser**.
@@ -54,6 +55,7 @@ All inference runs **client-side**, **no server**, **no backend**, **no TensorFl
 ## Hyperparameter Log
 
 For full details on all experiments, configurations, and results, see the [HYPERPARAMETERS.md](HYPERPARAMETERS.md) file.
+
 
 
 
