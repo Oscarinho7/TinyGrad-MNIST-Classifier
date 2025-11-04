@@ -75,229 +75,266 @@
         .btn-auto:hover {
             background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
         }
-        .btn-pen {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            color: white;
-            border-color: #b91c1c;
-        }
-        .btn-pen:hover {
-            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-        }
-        .btn-eraser {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            color: white;
-            border-color: #b91c1c;
-        }
-        .btn-eraser:hover {
-            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-        }
-        .btn-clear {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            color: white;
-            border-color: #b91c1c;
-        }
-        .btn-clear:hover {
-            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-        }
-        .btn-clear:active {
-            background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
-        }
-        .active {
-            background: linear-gradient(135deg, #6d28d9 0%, #5b21b6 100%);
-        }
-        .active:hover {
-            background: linear-gradient(135deg, #5b21b6 0%, #4c1d95 100%);
-        }
-        .slider {
-            appearance: none;
-            width: 100%;
-            height: 4px;
-            background: #374151;
-            outline: none;
-            opacity: 0.7;
-            transition: opacity 0.2s;
-            border-radius: 9999px;
-        }
-        .slider:hover {
-            opacity: 1;
-        }
-        .slider::-webkit-slider-thumb {
-            appearance: none;
-            width: 16px;
-            height: 16px;
-            background: #3b82f6;
-            cursor: pointer;
-            border-radius: 50%;
-        }
-        .slider::-moz-range-thumb {
-            width: 16px;
-            height: 16px;
-            background: #3b82f6;
-            cursor: pointer;
-            border-radius: 50%;
-        }
-        #brush-size-value {
-            font-size: 0.75rem;
-            color: #9ca3af;
-        }
-        .select-modern {
-            background-color: #1f2937;
-            color: white;
-            border: 1px solid #374151;
-            border-radius: 0.25rem;
-            padding: 0.5rem;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-        }
-        .select-modern:focus {
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+        .btn-auto.active {
+            background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%);
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
         }
     </style>
 </head>
-<body class="flex flex-col items-center justify-center min-h-screen p-4 font-sans antialiased">
-    <div class="max-w-md w-full space-y-4">
-        <h1 class="text-2xl font-bold text-center">Digit Classifier</h1>
-        <div class="relative">
-            <canvas id="canvas" width="280" height="280" class="w-full h-auto border border-gray-600"></canvas>
-            <div class="absolute top-2 right-2 bg-gray-800 px-2 py-1 rounded text-xs">280x280</div>
+<body class="flex flex-col items-center justify-center min-h-screen p-4">
+    <div class="w-full max-w-md bg-[#111827] rounded-lg shadow-lg p-6">
+        <h1 class="text-2xl font-bold mb-4 text-center">MNIST Digit Classifier</h1>
+        <p class="text-center mb-4">Select a model, draw a digit, and see the prediction!</p>
+
+        <!-- Model Selection -->
+        <div class="mb-4">
+            <label for="model-select" class="block text-sm font-medium mb-2">Model Selection</label>
+            <select id="model-select" class="w-full bg-gray-700 text-white p-2 rounded">
+                <option value="mlp">MLP</option>
+                <option value="cnn">CNN</option>
+            </select>
         </div>
-        <div class="flex space-x-2">
-            <button id="pen-btn" class="btn-modern btn-pen flex-1 py-2 px-4 rounded-md btn-active">Pen</button>
-            <button id="eraser-btn" class="btn-modern btn-eraser flex-1 py-2 px-4 rounded-md">Eraser</button>
-            <button id="clear-btn" class="btn-modern btn-clear flex-1 py-2 px-4 rounded-md">Clear</button>
+
+        <!-- Drawing Tools -->
+        <div class="flex items-center gap-3 mb-4">
+            <button id="pen-btn" class="px-4 py-2 rounded bg-blue-600 text-white btn-active">Pen</button>
+            <button id="eraser-btn" class="px-4 py-2 rounded bg-red-600 text-white">Eraser</button>
+            <button id="clear-btn" class="px-4 py-2 rounded bg-gray-600 text-white">Clear</button>
+            <label class="ml-2 text-sm">Brush size
+                <input id="brush-size" type="range" min="4" max="48" value="20" class="ml-2">
+            </label>
         </div>
-        <div class="flex items-center space-x-2">
-            <label for="brush-size" class="text-sm">Brush size:</label>
-            <input type="range" id="brush-size" min="1" max="50" value="10" class="slider flex-1">
-            <span id="brush-size-value">10</span>
+
+        <!-- Canvas -->
+        <div class="flex justify-center mb-4">
+            <canvas id="drawing-canvas" width="280" height="280" style="width:280px;height:280px;"></canvas>
         </div>
-        <div class="flex space-x-2 items-center">
-            <button id="run-model" class="btn-modern btn-run flex-1 py-2 px-4 rounded-md">Run Model</button>
-            <button id="auto-run" class="btn-modern btn-auto flex-1 py-2 px-4 rounded-md">Toggle Auto-run</button>
+
+        <!-- Run Model Button and Preview -->
+        <div class="flex justify-center gap-3 mb-4">
+            <button id="run-model" class="btn-modern btn-run px-6 py-2 rounded-lg">Run Model</button>
+            <button id="auto-run" class="btn-modern btn-auto px-6 py-2 rounded-lg">Toggle Auto-run</button>
             <div class="flex flex-col items-center">
-                <label for="preview" class="text-sm mb-1">Preview 28x28</label>
-                <canvas id="preview" width="28" height="28" class="preview"></canvas>
+                <span class="text-xs mb-1">Preview 28×28</span>
+                <canvas id="preview28" width="28" height="28" class="preview"></canvas>
             </div>
         </div>
-        <select id="model-select" class="select-modern w-full">
-            <option value="mnist_mlp">MLP (96.65%)</option>
-            <option value="mnist_convnet">CNN (98.36%)</option>
-        </select>
-        <h2 class="text-xl font-bold text-center">Best Guess: <span id="best-guess">-</span></h2>
-        <p class="text-center text-gray-400">Inference Time: <span id="inference-time">-</span> ms</p>
-        <div id="probability-bars" class="flex justify-between space-x-2 mt-4"></div>
+
+        <!-- Prediction Output -->
+        <div id="prediction" class="text-center mb-4">
+            <p id="best-guess" class="text-lg font-bold">Best Guess: -</p>
+            <p id="inference-time" class="text-sm">Inference Time: - ms</p>
+        </div>
+
+        <!-- Probability Bars Container -->
+        <div id="probability-bars" class="flex justify-around w-full mt-4">
+        </div>
     </div>
 
     <script type="module">
-        const canvas = document.getElementById('canvas');
+        // Import models
+        import mnist_mlp from './mnist_mlp/mnist_mlp.js';
+        import mnist_convnet from './mnist_convnet/mnist_convnet.js';
+
+        const canvas = document.getElementById('drawing-canvas');
         const ctx = canvas.getContext('2d', { willReadFrequently: true });
-        const preview = document.getElementById('preview');
-        const previewCtx = preview.getContext('2d');
-        const statusText = document.getElementById('status-text') || document.createElement('p'); // Placeholder if not in HTML
-        const bestGuess = document.getElementById('best-guess');
-        const inferenceTime = document.getElementById('inference-time');
-        const probabilityBars = document.getElementById('probability-bars');
+        const preview = document.getElementById('preview28');
+        const pctx = preview.getContext('2d');
+
+        function setupHiDPI() {
+            const ratio = Math.max(window.devicePixelRatio || 1, 1);
+            const cssW = parseInt(canvas.style.width) || canvas.width;
+            const cssH = parseInt(canvas.style.height) || canvas.height;
+            canvas.width = Math.round(cssW * ratio);
+            canvas.height = Math.round(cssH * ratio);
+            canvas.style.width = cssW + 'px';
+            canvas.style.height = cssH + 'px';
+            ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+            ctx.fillStyle = 'black';
+            ctx.fillRect(0, 0, cssW, cssH);
+        }
+        setupHiDPI();
+        window.addEventListener('resize', setupHiDPI);
+
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
 
         let drawing = false;
         let eraser = false;
+        let lastX = 0, lastY = 0;
+        let brushSize = 20;
         let autoRun = false;
-        let brushSize = 10;
-        let currentModel = 'mnist_mlp';
-        let net = null;
+        let currentModel = 'mlp';
+        let modelRunner = null;
+        let device = null;
 
-        const getDevice = async () => {
-            if (!navigator.gpu) throw new Error("WebGPU not supported on this browser.");
+        async function initWebGPU() {
+            if (!navigator.gpu) {
+                alert('WebGPU not supported.');
+                return;
+            }
             const adapter = await navigator.gpu.requestAdapter();
-            if (!adapter) throw new Error("No appropriate GPUAdapter found.");
-            return await adapter.requestDevice();
-        };
+            device = await adapter.requestDevice();
+        }
 
-        const loadNet = async (modelName) => {
-            const jsPath = `./${modelName}/${modelName}.js`;
-            const netPath = `./${modelName}/${modelName}.webgpu.safetensors`;
-            try {
-                statusText.innerHTML = "Loading model...";
-                const device = await getDevice();
-                const tinygrad = (await import(jsPath)).default;
-                net = await tinygrad.load(device, netPath);
-                statusText.innerHTML = "Ready - start drawing!";
-            } catch (e) {
-                console.error(e);
-                statusText.innerHTML = "Error loading model";
+        async function loadModel(modelType) {
+            let modelModule, safetensorsUrl;
+            if (modelType === 'mlp') {
+                modelModule = mnist_mlp;
+                safetensorsUrl = './mnist_mlp/mnist_mlp.webgpu.safetensors';
+            } else {
+                modelModule = mnist_convnet;
+                safetensorsUrl = './mnist_convnet/mnist_convnet.webgpu.safetensors';
             }
-        };
 
-        const runInference = async () => {
-            if (!net) return;
+            const safetensors = await fetch(safetensorsUrl).then(res => res.arrayBuffer()).then(buf => new Uint8Array(buf));
+            modelRunner = await modelModule.setupNet(device, safetensors);
+        }
 
-            const startTime = performance.now();
-            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            const grayscale = new Float32Array(28 * 28);
-            for (let y = 0; y < 28; y++) {
-                for (let x = 0; x < 28; x++) {
-                    const idx = (y * 10 * canvas.width + x * 10) * 4; // Scale 280 to 28
-                    grayscale[y * 28 + x] = imageData.data[idx] / 255; // Grayscale
-                }
+        function getImageData28() {
+            const tmp = document.createElement('canvas');
+            tmp.width = 28;
+            tmp.height = 28;
+            const tctx = tmp.getContext('2d');
+            tctx.imageSmoothingEnabled = false;
+            tctx.drawImage(canvas, 0, 0, tmp.width, tmp.height);
+
+            const img = tctx.getImageData(0, 0, tmp.width, tmp.height);
+            const data = new Float32Array(28 * 28);
+            for (let i = 0; i < 28 * 28; i++) {
+                const idx = i * 4;
+                const r = img.data[idx], g = img.data[idx + 1], b = img.data[idx + 2];
+                const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+                data[i] = lum * 2 - 1;
             }
-            const logits = await net.run(grayscale);
-            const endTime = performance.now();
-            inferenceTime.innerText = (endTime - startTime).toFixed(2);
+            pctx.imageSmoothingEnabled = false;
+            pctx.clearRect(0, 0, 28, 28);
+            pctx.drawImage(tmp, 0, 0, 28, 28);
+            console.log('Input Data:', data);
+            return data;
+        }
 
-            const exp = logits.map(Math.exp);
-            const sum = exp.reduce((a, b) => a + b, 0);
-            const softmax = exp.map(v => v / sum);
+        function updatePreview() {
+            const tmp = document.createElement('canvas');
+            tmp.width = 28;
+            tmp.height = 28;
+            const tctx = tmp.getContext('2d');
+            tctx.imageSmoothingEnabled = false;
+            tctx.drawImage(canvas, 0, 0, 28, 28);
+            pctx.imageSmoothingEnabled = false;
+            pctx.clearRect(0, 0, 28, 28);
+            pctx.drawImage(tmp, 0, 0, 28, 28);
+        }
 
-            let maxProb = 0;
-            let bestDigit = 0;
+        function softmax(arr) {
+            const validArr = arr.filter(v => !isNaN(v));
+            if (validArr.length === 0) {
+                return new Array(10).fill(0.1);
+            }
+            const max = Math.max(...validArr);
+            const exps = arr.map(v => isNaN(v) ? 0 : Math.exp(v - max));
+            const s = exps.reduce((a, b) => a + b, 0);
+            if (s === 0) {
+                return new Array(10).fill(0.1);
+            }
+            return exps.map(v => v / s);
+        }
+
+        function setBars(probs) {
+            let maxProb = -1, best = -1;
             for (let i = 0; i < 10; i++) {
-                const prob = (softmax[i] * 100).toFixed(0) + '%';
-                document.getElementById(`prob-${i}`).innerText = prob;
-                document.getElementById(`bar-${i}`).style.height = `${softmax[i] * 100}%`;
-                if (softmax[i] > maxProb) {
-                    maxProb = softmax[i];
-                    bestDigit = i;
+                if (probs[i] > maxProb) { 
+                    maxProb = probs[i]; 
+                    best = i; 
                 }
+                const pct = Math.round(probs[i] * 100);
+                const barEl = document.getElementById(`bar-${i}`);
+                const probEl = document.getElementById(`prob-${i}`);
+                if (barEl) barEl.style.height = `${pct}%`;
+                if (probEl) probEl.textContent = `${pct}%`;
             }
-            bestGuess.innerText = bestDigit;
-        };
+            document.getElementById('best-guess').textContent = `Best Guess: ${best}`;
+        }
 
-        const resetPrediction = () => {
-            bestGuess.innerText = '-';
-            inferenceTime.innerText = '-';
+        async function runInference() {
+            if (!modelRunner) return;
+
+            const t0 = performance.now();
+            const input = getImageData28();
+            const result = await modelRunner(input);
+            
+            // Le modèle retourne un tableau avec un seul élément (Float32Array des logits)
+            const logits = result[0];
+            console.log('Logits:', logits);
+            
+            const probs = softmax(Array.from(logits));
+            console.log('Probabilities:', probs);
+            
+            setBars(probs);
+            const t1 = performance.now();
+            document.getElementById('inference-time').textContent = `Inference Time: ${(t1 - t0).toFixed(2)} ms`;
+            updatePreview();
+        }
+
+        function resetPrediction() {
             for (let i = 0; i < 10; i++) {
-                document.getElementById(`prob-${i}`).innerText = '0%';
-                document.getElementById(`bar-${i}`).style.height = '0%';
+                const barEl = document.getElementById(`bar-${i}`);
+                const probEl = document.getElementById(`prob-${i}`);
+                if (barEl) barEl.style.height = `0%`;
+                if (probEl) probEl.textContent = `0%`;
             }
-        };
+            document.getElementById('best-guess').textContent = `Best Guess: -`;
+            document.getElementById('inference-time').textContent = `Inference Time: - ms`;
+        }
 
-        const updatePreview = () => {
-            previewCtx.drawImage(canvas, 0, 0, 28, 28);
-        };
+        function getPointerPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.clientX !== undefined ? e.clientX : (e.touches ? e.touches[0].clientX : 0);
+            const clientY = e.clientY !== undefined ? e.clientY : (e.touches ? e.touches[0].clientY : 0);
+            return { x: clientX - rect.left, y: clientY - rect.top };
+        }
 
-        canvas.addEventListener('mousedown', (e) => {
+        function startDrawing(e) {
+            e.preventDefault();
+            canvas.setPointerCapture(e.pointerId);
             drawing = true;
+            const pos = getPointerPos(e);
+            lastX = pos.x;
+            lastY = pos.y;
             ctx.beginPath();
-            ctx.moveTo(e.offsetX, e.offsetY);
-        });
+            ctx.moveTo(lastX, lastY);
+            ctx.lineWidth = brushSize;
+            ctx.strokeStyle = eraser ? 'black' : 'white';
+            ctx.lineTo(lastX, lastY);
+            ctx.stroke();
+        }
 
-        canvas.addEventListener('mousemove', (e) => {
-            if (drawing) {
-                ctx.lineTo(e.offsetX, e.offsetY);
-                ctx.lineWidth = brushSize;
-                ctx.strokeStyle = eraser ? 'black' : 'white';
-                ctx.stroke();
-                updatePreview();
-                if (autoRun) runInference();
+        function stopDrawing(e) {
+            if (drawing && e && e.pointerId !== undefined) {
+                try { canvas.releasePointerCapture(e.pointerId); } catch(_) {}
             }
-        });
-
-        canvas.addEventListener('mouseup', () => {
             drawing = false;
-            if (!autoRun) runInference();
-        });
+            if (autoRun) runInference();
+        }
 
-        canvas.addEventListener('mouseout', () => drawing = false);
+        function draw(e) {
+            if (!drawing) return;
+            const pos = getPointerPos(e);
+            ctx.strokeStyle = eraser ? 'black' : 'white';
+            ctx.lineWidth = brushSize;
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(pos.x, pos.y);
+            ctx.stroke();
+            lastX = pos.x;
+            lastY = pos.y;
+        }
+
+        canvas.addEventListener('pointerdown', startDrawing);
+        canvas.addEventListener('pointermove', draw);
+        canvas.addEventListener('pointerup', stopDrawing);
+        canvas.addEventListener('pointercancel', stopDrawing);
+        canvas.addEventListener('pointerleave', stopDrawing);
 
         document.getElementById('pen-btn').addEventListener('click', () => {
             eraser = false;
