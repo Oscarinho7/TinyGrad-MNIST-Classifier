@@ -136,6 +136,6 @@ if __name__ == "__main__":
   state_dict = safe_load(dir_name / f"{model_name}.safetensors")
   load_state_dict(model, state_dict)
   input = Tensor.randn(1, 1, 28, 28)
-  prg, *_, state = export_model(model_export, Device.DEFAULT.lower(), input, model_name=model_name)
+  prg, *_, state = export_model(model, Device.DEFAULT.lower(), input, model_name=model_name)
   safe_save(state, dir_name / f"{model_name}.webgpu.safetensors")
   with open(dir_name / f"{model_name}.js", "w") as text_file: text_file.write(prg)
