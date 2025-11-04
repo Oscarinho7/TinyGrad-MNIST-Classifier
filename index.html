@@ -215,7 +215,7 @@
                 const idx = i * 4;
                 const r = img.data[idx], g = img.data[idx + 1], b = img.data[idx + 2];
                 const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-                data[i] = lum * 2 - 1;
+                data[i] = lum;
             }
             pctx.imageSmoothingEnabled = false;
             pctx.clearRect(0, 0, 28, 28);
